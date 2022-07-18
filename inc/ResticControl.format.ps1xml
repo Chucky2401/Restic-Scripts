@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+    <View>
+        <Name>ResticControl</Name>
+        <ViewSelectedBy>
+            <TypeName>Tjvs.Restic.Stats</TypeName>
+        </ViewSelectedBy>
+        <ListControl>
+            <ListEntries>
+                <ListEntry>
+                    <ListItems>
+                        <ListItem>
+                            <Label>No. Snapshots</Label>
+                            <PropertyName>SnapshotNumber</PropertyName>
+                        </ListItem>
+                        <ListItem>
+                            <Label>No. Files</Label>
+                            <PropertyName>TotalFileBackup</PropertyName>
+                        </ListItem>
+                        <ListItem>
+                            <Label>Total Files Size</Label>
+                            <ScriptBlock>
+                                $_.FileSizeInString()
+                            </ScriptBlock>
+                        </ListItem>
+                        <ListItem>
+                            <Label>No. Blobs</Label>
+                            <PropertyName>TotalBlob</PropertyName>
+                        </ListItem>
+                        <ListItem>
+                            <Label>Total Blobs Size</Label>
+                            <ScriptBlock>
+                                $_.BlobSizeInString()
+                            </ScriptBlock>
+                        </ListItem>
+                        <ListItem>
+                            <PropertyName>Ratio</PropertyName>
+                        </ListItem>
+                    </ListItems>
+                </ListEntry>
+            </ListEntries>
+        </ListControl>
+    </View>
+    <View>
+        <Name>ResticControl</Name>
+        <ViewSelectedBy>
+            <TypeName>Tjvs.Restic.Stats</TypeName>
+        </ViewSelectedBy>
+        <TableControl>
+            <TableHeaders>
+                <TableColumnHeader>
+                    <Label>No. Snapshots</Label>
+                    <Width>13</Width>
+                    <Alignment>Right</Alignment>
+                </TableColumnHeader>
+                <TableColumnHeader>
+                    <Label>No. Files</Label>
+                    <Width>10</Width>
+                    <Alignment>Right</Alignment>
+                </TableColumnHeader>
+                <TableColumnHeader>
+                    <Label>Total Files Size</Label>
+                    <Width>16</Width>
+                    <Alignment>Right</Alignment>
+                </TableColumnHeader>
+                <TableColumnHeader>
+                    <Label>No. Blobs</Label>
+                    <Width>10</Width>
+                    <Alignment>Right</Alignment>
+                </TableColumnHeader>
+                <TableColumnHeader>
+                    <Label>Total Blobs Size</Label>
+                    <Width>16</Width>
+                    <Alignment>Right</Alignment>
+                </TableColumnHeader>
+                <TableColumnHeader>
+                    <Label>Ratio</Label>
+                    <Width>5</Width>
+                    <Alignment>Right</Alignment>
+                </TableColumnHeader>
+            </TableHeaders>
+            <TableRowEntries>
+                <TableRowEntry>
+                    <Wrap />
+                    <TableColumnItems>
+                        <TableColumnItem>
+                            <PropertyName>SnapshotNumber</PropertyName>
+                        </TableColumnItem>
+                        <TableColumnItem>
+                            <PropertyName>TotalFileBackup</PropertyName>
+                        </TableColumnItem>
+                        <TableColumnItem>
+                            <ScriptBlock>
+                                $_.FileSizeInString()
+                            </ScriptBlock>
+                        </TableColumnItem>
+                        <TableColumnItem>
+                            <PropertyName>TotalBlob</PropertyName>
+                        </TableColumnItem>
+                        <TableColumnItem>
+                            <ScriptBlock>
+                                $_.BlobSizeInString()
+                            </ScriptBlock>
+                        </TableColumnItem>
+                        <TableColumnItem>
+                            <PropertyName>Ratio</PropertyName>
+                        </TableColumnItem>
+                    </TableColumnItems>
+                </TableRowEntry>
+            </TableRowEntries>
+        </TableControl>
+    </View>
+    </ViewDefinitions>
+</Configuration>
