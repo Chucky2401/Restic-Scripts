@@ -22,14 +22,14 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 1.0.0.20
+        Version        : 1.0.0.21
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
         Date modified  : 08/07/2022
         Change         : Final version
     .LINK
-        http://srv-pa-git.sterimed.local/Chemin/vers/dépôt/gitlab/sterimed
+        https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
 
 #---------------------------------------------------------[Script Parameters]------------------------------------------------------
@@ -463,10 +463,10 @@ BEGIN {
         )
 
         ## File
-        $oResticProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
+        Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
         $sRepoDataSize  = Get-Content $ResticResultStatsBefore | Select-Object -Skip 2
         ## Blob
-        $oResticProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats --mode raw-data" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
+        Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats --mode raw-data" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
         $sRepoBlobSize  = Get-Content $ResticResultStatsBefore | Select-Object -Skip 2
 
         # Scripts block
@@ -726,7 +726,7 @@ END {
         ShowLogMessage "OTHER" "`tTotal files size:   $($oDataBefore.FileSizeInString()) / $($oDataAfter.FileSizeInString())" ([ref]$sLogFile)
         ShowLogMessage "OTHER" "`tTotal blobs:        $($oDataBefore.TotalBlob) / $($oDataAfter.TotalBlob)" ([ref]$sLogFile)
         ShowLogMessage "OTHER" "`tTotal blobs size:   $($oDataBefore.BlobSizeInString()) / $($oDataAfter.BlobSizeInString())" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tRatio:              $($oDataBefore.Ratio) / $($oDataAfter.Ratio)" ([ref]$sLogFile)
+        ShowLogMessage "OTHER" "`tRatio:              $($oDataBefore.Ratio) % / $($oDataAfter.Ratio) %" ([ref]$sLogFile)
     } ElseIf (!$NoStats -and $NoDelete) {
         ShowLogMessage "INFO" "Current restic repository stats:" ([ref]$sLogFile)
         ShowLogMessage "OTHER" "`tSnapshot numbers:   $($oDataBefore.SnapshotNumber)" ([ref]$sLogFile)
@@ -734,7 +734,7 @@ END {
         ShowLogMessage "OTHER" "`tTotal files size:   $($oDataBefore.FileSizeInString())" ([ref]$sLogFile)
         ShowLogMessage "OTHER" "`tTotal blobs:        $($oDataBefore.TotalBlob)" ([ref]$sLogFile)
         ShowLogMessage "OTHER" "`tTotal blobs size:   $($oDataBefore.BlobSizeInString())" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tRatio:              $($oDataBefore.Ratio)" ([ref]$sLogFile)
+        ShowLogMessage "OTHER" "`tRatio:              $($oDataBefore.Ratio) %" ([ref]$sLogFile)
     }
 
     Write-CenterText "*********************************" $sLogFile
