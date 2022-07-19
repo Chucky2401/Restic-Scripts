@@ -82,7 +82,9 @@ The most important part of this Readme!
 2. I recommend you to create a file with your Restic password store as an encrypted string. If you don't want to do that, go to the step 3.
 
    a. Open a PowerShell Console, and use this command to create the file: `Read-Host "Enter New Password" -AsSecureString |  ConvertFrom-SecureString | Out-File D:\Restic.txt`
+   
    *Change `D:\Restic.txt` by the path and the filename of your choice.*
+   
    b. Type your password and validate by `Enter`
 
 3. Open the file `conf\Clean-Restic.ps1.ini` and edit the variables as below:
@@ -95,8 +97,13 @@ The most important part of this Readme!
 #### Examples
 
 1. .\Clean-Restic.ps1 -Game "V Rising"
+
 *Will clean snapshots for the game "V Rising" and keep the 5 latest snapshots*
+
 2. .\Clean-Restic.ps1 -Game "Cyberpunk 2077" -SnapshotToKeep 1
+
 *Will clean snapshots for the game "Cyberpunk 2077" and keep the latest snapshot*
+
 3. .\Clean-Restic.ps1 -Game "Raft" -SnapshotToKeep 10 -NoDelete
+
 *Will show you the snapshots that should be deleted*
