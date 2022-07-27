@@ -22,12 +22,12 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 1.0.0.21
+        Version        : 1.1.0
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 08/07/2022
-        Change         : Final version
+        Date modified  : 27/07/2022
+        Change         : Dot sourced functions in file
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
@@ -59,8 +59,9 @@ BEGIN {
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
 
+    . "$($PSScriptRoot)\inc\func\Start-Command.ps1"
     . "$($PSScriptRoot)\inc\func\ConverTo-HashtableSize.ps1"
-    . "$($PSScriptRoot)\inc\func\ConvertTo-ResticStatsCustomObject.ps1"
+    . "$($PSScriptRoot)\inc\func\Get-ResticStats.ps1"
 
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -437,7 +438,7 @@ BEGIN {
     $oCredentials.GetNetworkCredential().Password | Out-File $sPasswordFile
 
     # Info
-    $oDataBefore               = ConvertTo-ResticStatsCustomObject
+    $oDataBefore               = Get-ResticStats
 
     $aSnapshotRemoved         = @()
     $aSnapshotStillPresent    = @()
@@ -562,7 +563,7 @@ END {
     
     If (!$NoStats -and !$NoDelete) {
         # Stats
-        $oDataAfter = ConvertTo-ResticStatsCustomObject
+        $oDataAfter = Get-ResticStats
 
         ShowLogMessage "INFO" "Stats:" ([ref]$sLogFile)
         ShowLogMessage "OTHER" "`tSnapshot numbers:   $($oDataBefore.SnapshotNumber) / $($oDataAfter.SnapshotNumber)" ([ref]$sLogFile)

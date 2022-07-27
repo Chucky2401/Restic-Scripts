@@ -72,7 +72,9 @@ If you use the parameter `NoDelete` you will only have the current stats of your
 
 #### Prerequisites
 
-This script has only been testing with **[PowerShell Core 7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)**
+This script has only been testing with:
+- [**PowerShell Core** 7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
+- [**Restic** restic 0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
 
 #### How to use
 

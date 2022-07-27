@@ -1,4 +1,4 @@
-function ConvertTo-ResticStatsCustomObject {
+function Get-ResticStats {
     <#
         .SYNOPSIS
             Returns statistics from Restic
@@ -7,26 +7,27 @@ function ConvertTo-ResticStatsCustomObject {
         .OUTPUTS
             PSCustomObject with all stats
         .EXAMPLE
-            ConvertTo-ResticStatsCustomObject
+            Get-ResticStats
         .NOTES
-            Name           : ConvertTo-ResticStatsCustomObject
+            Name           : Get-ResticStats
+            Version        : 1.1.2
             Created by     : Chucky2401
             Date created   : 07/07/2022
             Modified by    : Chucky2401
-            Date modified  : 07/07/2022
-            Change         : Creating
+            Date modified  : 27/07/2022
+            Change         : Use Start-Command instead of Start-Process + Rename
     #>
     [CmdletBinding()]
     Param (
     )
 
     ## File
-    $oProcessRestic = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
-    $sRepoDataSize  = Get-Content $ResticResultStatsBefore | Select-Object -Skip 2
+    $oStats = Start-Command -Title "Restic Stats" -FilePath restic -ArgumentList "$($sCommonResticArguments) stats"
+    $sRepoDataSize  = $oStats.stdout.Split("`n") | Select-Object -Skip 2
 
     ## Blob
-    $oProcessRestic = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats --mode raw-data" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
-    $sRepoBlobSize  = Get-Content $ResticResultStatsBefore | Select-Object -Skip 2
+    $oRawStats = Start-Command -Title "Restic Raw Stats" -FilePath restic -ArgumentList "$($sCommonResticArguments) stats --mode raw-data"
+    $sRepoBlobSize  = $oRawStats.stdout.Split("`n") | Select-Object -Skip 2
 
     # Scripts block
     $sbFileSizeInString = {

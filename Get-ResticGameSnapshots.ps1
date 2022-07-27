@@ -37,8 +37,9 @@ Param (
 #$ErrorActionPreference      = "SilentlyContinue"
 $ErrorActionPreference      = "Stop"
 
+. "$($PSScriptRoot)\inc\func\Start-Command.ps1"
 . "$($PSScriptRoot)\inc\func\ConverTo-HashtableSize.ps1"
-. "$($PSScriptRoot)\inc\func\ConvertTo-ResticStatsCustomObject.ps1"
+. "$($PSScriptRoot)\inc\func\Get-ResticStats.ps1"
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -333,44 +334,6 @@ function Write-CenterText {
     Write-Host $sFinalString
     If ($null -ne $sLogFile) {
         Write-Output $sFinalString >> $sLogFile
-    }
-}
-
-#TODO: Help header / Param block
-Function Start-Command {
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory=$False)]
-        [string]$Title = "Execute Process",
-        [Parameter(Mandatory=$True)]
-        [string]$FilePath,
-        [Parameter(Mandatory=$True)]
-        [string]$ArgumentList
-    )
-
-    Try {
-        $oProcessInfo                        = New-Object System.Diagnostics.ProcessStartInfo
-        $oProcess                            = New-Object System.Diagnostics.Process
-        
-        $oProcessInfo.FileName               = $FilePath
-        $oProcessInfo.RedirectStandardError  = $true
-        $oProcessInfo.RedirectStandardOutput = $true
-        $oProcessInfo.UseShellExecute        = $false
-        $oProcessInfo.Arguments              = $ArgumentList
-        $oProcess.StartInfo                  = $oProcessInfo
-
-        $oProcess.Start() | Out-Null
-
-        [PSCustomObject]@{
-            commandTitle = $Title
-            stdout       = $oProcess.StandardOutput.ReadToEnd()
-            stderr       = $oProcess.StandardError.ReadToEnd()
-            ExitCode     = $oProcess.ExitCode
-        }
-
-        $oProcess.WaitForExit()
-    } Catch {
-        exit
     }
 }
 
@@ -680,7 +643,7 @@ $oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
  # Username    NoteProperty string Username=ZOUKZOUK\The Black Wizard
  #>
 
-
+$oSnapshotsList
 
 Write-CenterText "*********************************" $sLogFile
 Write-CenterText "*                               *" $sLogFile
