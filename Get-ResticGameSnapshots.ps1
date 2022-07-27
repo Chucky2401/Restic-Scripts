@@ -37,6 +37,9 @@ Param (
 #$ErrorActionPreference      = "SilentlyContinue"
 $ErrorActionPreference      = "Stop"
 
+. "$($PSScriptRoot)\inc\func\ConverTo-HashtableSize.ps1"
+. "$($PSScriptRoot)\inc\func\ConvertTo-ResticStatsCustomObject.ps1"
+
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
 function LogMessage {
@@ -409,6 +412,32 @@ function Get-Settings {
 
 #TODO: Help header
 function Read-GameChoice {
+    <#
+        .SYNOPSIS
+            Summary of the script
+        .DESCRIPTION
+            Script description
+        .PARAMETER param1
+            Parameter description
+        .INPUTS
+            Pipeline input data
+        .OUTPUTS
+            Output data
+        .EXAMPLE
+            .\template.ps1 param1
+        .NOTES
+            Name           : Script-Name
+            Version        : 1.0.0.1
+            Created by     : Chucky2401
+            Date Created   : 27/07/2022
+            Modify by      : Chucky2401
+            Date modified  : 27/07/2022
+            Change         : Creation
+            Copy           : Copy-Item .\Script-Name.ps1 \Final\Path\Script-Name.ps1 -Force
+        .LINK
+            http://github.com/UserName/RepoName
+    #>
+    [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -480,6 +509,95 @@ function Read-GameChoice {
     Return $selection-1
 }
 
+function Get-SnapshotsList {
+    <#
+        .SYNOPSIS
+            Summary of the script
+        .DESCRIPTION
+            Script description
+        .PARAMETER param1
+            Parameter description
+        .INPUTS
+            Pipeline input data
+        .OUTPUTS
+            Output data
+        .EXAMPLE
+            .\template.ps1 param1
+        .NOTES
+            Name           : Script-Name
+            Version        : 1.0.0.1
+            Created by     : Chucky2401
+            Date Created   : 27/07/2022
+            Modify by      : Chucky2401
+            Date modified  : 27/07/2022
+            Change         : Creation
+            Copy           : Copy-Item .\Script-Name.ps1 \Final\Path\Script-Name.ps1 -Force
+        .LINK
+            http://github.com/UserName/RepoName
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [String]$Game
+    )
+
+    $oSnapshotsList = Start-Command "Restic Stats" restic "$($sCommonResticArguments) snapshots --tag `"$($Game)`" --json"
+
+    $jsonSnapshotsList = ConvertFrom-Json -InputObject $oSnapshotsList.stdout
+    <#
+     # hostname    NoteProperty     string hostname=Zoukzouk
+     # id          NoteProperty     string id=806c12af27b5a275b33bedd940af1ac5ad4af7b9e82305f4ff68fa63d78b91f3
+     # parent      NoteProperty     string parent=a972fc773f3c4caa4cb2f76e5bd46e50894233ba6129006a70f07d9966d214cb
+     # paths       NoteProperty     Object[] paths=System.Object[]
+     # short_id    NoteProperty     string short_id=806c12af
+     # tags        NoteProperty     Object[] tags=System.Object[]
+     # time        NoteProperty     datetime time=24/01/2022 13:06:58
+     # tree        NoteProperty     string tree=983c0e2f2a2754b1d9ea14818b83f57bc172a9fb8d07f840a92a8926a27a346b
+     # username    NoteProperty     string username=ZOUKZOUK\The Black Wizard
+     #>
+
+    $jsonSnapshotsList | ForEach-Object {
+        $game     = $PSItem.tags | Select-Object -First 1
+        $id       = $PSItem.id
+        $shortId  = $PSItem.short_id
+        $tree     = $PSItem.tree
+        $parent   = $PSItem.parent
+        $dateTime = $PSItem.time
+        $tags     = $PSItem.tags | Select-Object -Skip 1
+        $paths    = $PSItem.paths
+        $hostname = $PSItem.hostname
+        $username = $PSItem.username
+
+        If ($null -eq $parent) {
+            $parent = "#N/A"
+        }
+
+        $PSItem.PSObject.Properties.Remove('username')
+        $PSItem.PSObject.Properties.Remove('tree')
+        $PSItem.PSObject.Properties.Remove('time')
+        $PSItem.PSObject.Properties.Remove('tags')
+        $PSItem.PSObject.Properties.Remove('short_id')
+        $PSItem.PSObject.Properties.Remove('paths')
+        $PSItem.PSObject.Properties.Remove('parent')
+        $PSItem.PSObject.Properties.Remove('id')
+        $PSItem.PSObject.Properties.Remove('hostname')
+
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name Game -Value $game
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name Id -Value $id
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name ShortId -Value $shortId
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name Tree -Value $tree
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name Parent -Value $parent
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name DateTime -Value $dateTime
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name Tags -Value $tags
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name Paths -Value $paths
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name Hostname -Value $hostname
+        Add-Member -InputObject $PSItem -MemberType NoteProperty -Name Username -Value $username
+    }
+
+    return $jsonSnapshotsList
+}
+
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 $htSettings = Get-Settings "$($PSScriptRoot)\conf\Get-ResticGameSnapshots.ps1.ini"
@@ -546,8 +664,23 @@ If ($oResticProcess.ExitCode -eq 0) {
 }
 
 $sChooseGame = $aListGames[(Read-GameChoice -Title "Which game do you want to see the save?" -Message "Choose game" -Choices $aListGames)]
+#Write-Host "`nYou choose: $($sChooseGame)"
 
-Write-Host "`nYou choose: $($sChooseGame)"
+$oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
+<#
+ # Game        NoteProperty string Game=Elden Ring
+ # Id          NoteProperty string Id=31d0af683670766a907a6a023e05fc341020edc2349c5527a9c98dadb7f8bbbb
+ # ShortId     NoteProperty string ShortId=31d0af68
+ # Tree        NoteProperty string Tree=a436c54a02383e647d9b9d88ab3804343566c6729182fa81454f585518471b9f
+ # Parent      NoteProperty string Parent=#N/A
+ # DateTime    NoteProperty datetime DateTime=18/03/2022 21:30:06
+ # Tags        NoteProperty System.String Tags=manual
+ # Paths       NoteProperty Object[] Paths=System.Object[]
+ # Hostname    NoteProperty string Hostname=Zoukzouk
+ # Username    NoteProperty string Username=ZOUKZOUK\The Black Wizard
+ #>
+
+
 
 Write-CenterText "*********************************" $sLogFile
 Write-CenterText "*                               *" $sLogFile
