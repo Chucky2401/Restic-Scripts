@@ -11,9 +11,13 @@ My useful Restic scripts
   - [Why this script](#why-this-script)
   - [Description](#description)
     - [Clean-Restic](#clean-restic)
-      - [Prerequisites](#prerequisites)
-      - [How to use](#how-to-use)
-      - [Examples](#examples)
+      - [Clean-Restic - Prerequisites](#clean-restic---prerequisites)
+      - [Clean-Restic - How to use](#clean-restic---how-to-use)
+      - [Clean-Restic - Examples](#clean-restic---examples)
+    - [Get-ResticGameSnapshots](#get-resticgamesnapshots)
+      - [Get-ResticGameSnapshots - Prerequisites](#get-resticgamesnapshots---prerequisites)
+      - [Get-ResticGameSnapshots - How to use](#get-resticgamesnapshots---how-to-use)
+      - [Get-ResticGameSnapshots - Examples](#get-resticgamesnapshots---examples)
 
 ## Why this script
 
@@ -28,9 +32,14 @@ At the moment, there is this script available only:
 
 - Clean-Restic
 
-I plan to do this script (not exhaustive):
+This script is on beta:
 
 - Get-ResticGameSnapshots
+
+I plan to do this script (not exhaustive):
+
+- Remove-ResticSnapshot
+- Restore-ResticSnapshot
 
 ### Clean-Restic
 
@@ -70,14 +79,14 @@ If you use the parameter `NoDelete` you will only have the current stats of your
     Ratio:              17.77 %
 ```
 
-#### Prerequisites
+#### Clean-Restic - Prerequisites
 
 This script has only been testing with:
 
 - [**PowerShell Core** 7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
 - [**Restic** restic 0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
 
-#### How to use
+#### Clean-Restic - How to use
 
 The most important part of this Readme!
 
@@ -91,7 +100,7 @@ The most important part of this Readme!
    - **RepositoryPath**: The path to your Restic repository
 6. Run the script in a PowerShell console!
 
-#### Examples
+#### Clean-Restic - Examples
 
 1. .\Clean-Restic.ps1 -Game "V Rising"
 Will clean snapshots for the game "V Rising" and keep the 5 latest snapshots
@@ -101,3 +110,63 @@ Will clean snapshots for the game "Cyberpunk 2077" and keep the latest snapshot
 
 3. .\Clean-Restic.ps1 -Game "Raft" -SnapshotToKeep 10 -NoDelete
 Will show you the snapshots that should be deleted
+
+### Get-ResticGameSnapshots
+
+This script help me to list my Restic snapshot for a specific game. You don't have to know the tag in Restic, it will list you unique game tag at the beginning.
+This script don't need any parameter.
+
+You can use the common parameters of PowerShell (-Debug, -Verbose, etc.).
+You can also use the `Format-*` cmdlet to pipeline (see [examples](#get-resticgamesnapshots---examples) below)
+
+The Get-Help command works too:
+**Only with the parameter `-online` at the moment**
+`Get-Help .\Get-ResticGameSnapshots.ps1 -online`
+
+The script will generate a log file for each run and show you at the end the list of snapshot for the game you choose.
+Example:
+
+```powershell
+Game ShortId             DateTime Tags    No. Files Total Files Size No. Blobs Total Blobs Size  Ratio
+---- -------             -------- ----    --------- ---------------- --------- ----------------  -----
+Raft 5205211a 25/06/2022 13:23:12 stopped        19       940.73 KiB        20       946.35 KiB  100,6
+Raft 95c83e6f 25/06/2022 17:58:25 stopped        27         2.21 MiB        28         2.22 MiB 100,36
+Raft 967ca033 26/06/2022 16:12:01 stopped        29          2.6 MiB        30         2.61 MiB 100,31
+Raft d2d5dea4 26/06/2022 17:06:51 stopped        29          2.6 MiB        30         2.61 MiB 100,31
+Raft 94b6198d 26/06/2022 17:34:26 stopped        29         2.61 MiB        30         2.62 MiB 100,31
+Raft b5a9838f 27/06/2022 08:41:32 stopped        29         2.63 MiB        30         2.64 MiB 100,34
+Raft 9211b9ab 27/06/2022 13:23:16 stopped        29         2.65 MiB        30         2.66 MiB  100,3
+Raft b0df7638 27/06/2022 15:33:08 stopped        29         2.66 MiB        30         2.67 MiB  100,3
+Raft 79d79912 28/06/2022 08:43:42 stopped        29         2.67 MiB        30         2.68 MiB  100,3
+Raft 6dd5e255 28/06/2022 09:19:11 stopped        29         2.67 MiB        30         2.67 MiB  100,3
+Raft 40d79b4f 28/06/2022 11:05:54 stopped        29         2.69 MiB        30          2.7 MiB  100,3
+Raft f516ad76 28/06/2022 17:06:08 stopped        29          2.7 MiB        30         2.71 MiB  100,3
+Raft 76c746c0 29/06/2022 15:09:26 stopped        29         2.72 MiB        30         2.73 MiB 100,29
+Raft 28c462ef 29/06/2022 16:03:06 stopped        29         2.75 MiB        30         2.75 MiB 100,29
+Raft 61a7f899 29/06/2022 18:15:45 stopped        29         2.78 MiB        30         2.78 MiB 100,29
+Raft c55d3ceb 30/06/2022 10:41:19 stopped        29         2.82 MiB        30         2.83 MiB 100,28
+Raft 8940034c 11/07/2022 16:50:06 stopped        29         2.83 MiB        30         2.84 MiB 100,32
+```
+
+#### Get-ResticGameSnapshots - Prerequisites
+
+This script has only been testing with:
+
+- [**PowerShell Core** 7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
+- [**Restic** restic 0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
+
+#### Get-ResticGameSnapshots - How to use
+
+Refer to [Clean-Restic - How to use](#clean-restic---how-to-use)
+
+#### Get-ResticGameSnapshots - Examples
+
+1. Complete example for *Weed Shop 3*
+  .\Get-ResticGameSnapshots.ps1 | Format-Table -Autosize
+  ![Weed Shop 3](https://i.imgur.com/IIFbM5wl.png)
+2. Example for *Cyberpunk 2077*
+  .\Get-ResticGameSnapshots.ps1 | Format-Table -Autosize
+  ![Cyberpunk 2077](https://i.imgur.com/1NFt3gal.png)
+3. Complete example for *GhostWire: Tokyo* in format list
+  .\Get-ResticGameSnapshots.ps1 | Format-List
+  ![GhostWire: Tokyo](https://i.imgur.com/C6RBGhrl.png)

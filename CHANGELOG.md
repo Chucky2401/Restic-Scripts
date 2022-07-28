@@ -1,6 +1,6 @@
 # Changelog
 
-## 2022.07.27
+## 2022.07.28
 
 ### New
 
@@ -10,6 +10,11 @@
   - Retrieve snapshots for the game
 - Use `.\inc\func\Start-Command.ps1` to call Restic and output
   - Dot sourced in **Get-ResticGameSnapshots.ps1**
+- Import `.\inc\Format\ResticControl.format.ps1xml` into **Get-ResticGameSnapshots.ps1**
+- Add function **Read-SnapshotChoice** to be able to ask to the use the snapshot to remove or restore
+- Add function **Get-SnapshotDetail** to retrieve stats about a snapshot
+- Get snapshots stats in a new array
+- Add **Tjvs.Restic.SnapshotsStats** in `.\inc\Format\ResticControl.format.ps1xml`
 
 ### Change
 
@@ -19,12 +24,18 @@
 - Dot sourced **.\inc\func\Start-Command.ps1** in **Clean-Restic**
 - Use `Start-Command` function in **ConvertTo-ResticStatsCustomObject**
 - Rename ***ConvertTo*-ResticStatsCustomObject** to ***Get*-ResticStats**
+- Add control format for the snapshots details object (*Tjvs.Restic.SnapshotsStats*)
+- Remove temporary files used by `Start-Process`
+- Remove `--json` parameter in the variable `$sCommonResticArguments`
+- Can pass `SnapshotId` to **Get-ResticStats**
 - README
 - CHANGELOG
 
 ### Fix
 
 - Put the var back to `Start-Process` cmdlet into **ConverTo-HashtableSize** because the return of the function returned the Process.Information
+- `Read-GameChoice` in **Get-ResticGameSnapshots.ps1**: cast the `Read-Choice` to an int
+- Condition in `Where-Object` of the script block of `sbFileSizeInString` and `sbBlobSizeInString`: value greater or equal 1 instead of greater than 0 to avoid two results
 
 ### Log
 
