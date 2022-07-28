@@ -21,7 +21,7 @@
         Change         : Creation
         Copy           : Copy-Item .\Script-Name.ps1 \Final\Path\Script-Name.ps1 -Force
     .LINK
-        http://github.com/UserName/RepoName
+        https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
 
 #---------------------------------------------------------[Script Parameters]------------------------------------------------------
@@ -36,6 +36,8 @@ Param (
 #Set Error Action to Silently Continue
 #$ErrorActionPreference      = "SilentlyContinue"
 $ErrorActionPreference      = "Stop"
+
+Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
 
 . "$($PSScriptRoot)\inc\func\Start-Command.ps1"
 . "$($PSScriptRoot)\inc\func\ConverTo-HashtableSize.ps1"
@@ -466,12 +468,105 @@ function Read-GameChoice {
             Write-Host "`nBad choice! Please type a number between square bracket" -ForegroundColor Red
         }
 
-        $selection = Read-Host -Prompt $Message
+        $selection = [int](Read-Host -Prompt $Message)
     } While ($selection -lt 1 -or $selection -gt $Choices.Count)
 
     Return $selection-1
 }
 
+#TODO: Help header
+function Read-SnapshotChoice {
+    <#
+        .SYNOPSIS
+            Summary of the script
+        .DESCRIPTION
+            Script description
+        .PARAMETER param1
+            Parameter description
+        .INPUTS
+            Pipeline input data
+        .OUTPUTS
+            Output data
+        .EXAMPLE
+            .\template.ps1 param1
+        .NOTES
+            Name           : Script-Name
+            Version        : 1.0.0.1
+            Created by     : Chucky2401
+            Date Created   : 27/07/2022
+            Modify by      : Chucky2401
+            Date modified  : 27/07/2022
+            Change         : Creation
+            Copy           : Copy-Item .\Script-Name.ps1 \Final\Path\Script-Name.ps1 -Force
+        .LINK
+            http://github.com/UserName/RepoName
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Object[]]$Choices,
+        [System.String]$Title = [string]::Empty,
+        [System.String]$Message
+    )
+
+    $selection     = -1
+    $bFirstLoop    = $True
+    $iNoChoices    = $Choices.Count
+
+    If ($Title -ne [String]::Empty) {
+        Write-Host "`n`n"
+        Write-CenterText "===== $($Title) ====="
+        Write-Host "`n"
+    }
+    
+    $counter = 1
+    $aTags = @()
+
+    $Choices | ForEach-Object {
+        If ($null -eq $PSItem.Tags) {
+            $PSItem.Tags = ""
+        } ElseIf ($PSItem.Tags.GetType().Name -eq "Object[]") {
+            $PSItem.Tags | ForEach-Object { $aTags += $PSItem }
+            $PSItem.Tags = [String]::Join(";", $aTags)
+        } Else {
+            $PSItem.Tags = $PSItem.Tags
+        }
+    }
+
+    $iMaxLengthNumber          = If ($iNoChoices.ToString().Length -gt 3) { $iNoChoices.ToString().Length } Else { 3 }
+    $iMaxLengthShortId         = ((($Choices.ShortId | Where-Object { $null -ne $PSItem }) | Measure-Object -Maximum -Property Length).Maximum, (("ShortId" | Where-Object { $null -ne $PSItem }) | Measure-Object -Maximum -Property Length).Maximum | Measure-Object -Maximum).Maximum
+    $iMaxLengthDateTime        = ((($Choices.DateTime | Where-Object { $null -ne $PSItem }) | ForEach-Object { $PSItem.ToString() } | Measure-Object -Maximum -Property Length).Maximum, (("DateTime" | Where-Object { $null -ne $PSItem }) | ForEach-Object { $PSItem.ToString() } | Measure-Object -Maximum -Property Length).Maximum | Measure-Object -Maximum).Maximum
+    $iMaxLengthTags            = ((($Choices.Tags | Where-Object { $null -ne $PSItem }) | Measure-Object -Maximum -Property Length).Maximum, ((("Tags") | Where-Object { $null -ne $PSItem }) | Measure-Object -Maximum -Property Length).Maximum | Measure-Object -Maximum).Maximum
+    $iMaxLengthTotalFileBackup = ((($Choices.TotalFileBackup | Where-Object { $null -ne $PSItem }) | ForEach-Object { $PSItem.ToString() } | Measure-Object -Maximum -Property Length).Maximum, (("No. Files" | Where-Object { $null -ne $PSItem }) | ForEach-Object { $PSItem.ToString() } | Measure-Object -Maximum -Property Length).Maximum | Measure-Object -Maximum).Maximum
+    $iMaxLengthFileSize        = ((($Choices.FileSizeInString() | Where-Object { $null -ne $PSItem }) | Measure-Object -Maximum -Property Length).Maximum, (("Total Files Size" | Where-Object { $null -ne $PSItem }) | Measure-Object -Maximum -Property Length).Maximum | Measure-Object -Maximum).Maximum
+    $iMaxLengthTotalBlob       = ((($Choices.TotalBlob | Where-Object { $null -ne $PSItem }) | ForEach-Object { $PSItem.ToString() } | Measure-Object -Maximum -Property Length).Maximum, (("No. Blobs" | Where-Object { $null -ne $PSItem }) | ForEach-Object { $PSItem.ToString() } | Measure-Object -Maximum -Property Length).Maximum | Measure-Object -Maximum).Maximum
+    $iMaxLengthBlobSize        = ((($Choices.BlobSizeInString() | Where-Object { $null -ne $PSItem }) | Measure-Object -Maximum -Property Length).Maximum, (("Total Blobs Size" | Where-Object { $null -ne $PSItem }) | Measure-Object -Maximum -Property Length).Maximum | Measure-Object -Maximum).Maximum
+    $iMaxLengthRatio           = ((($Choices.Ratio | Where-Object { $null -ne $PSItem }) | ForEach-Object { $PSItem.ToString() } | Measure-Object -Maximum -Property Length).Maximum, (("Ratio" | Where-Object { $null -ne $PSItem }) | ForEach-Object { $PSItem.ToString() } | Measure-Object -Maximum -Property Length).Maximum | Measure-Object -Maximum).Maximum
+
+    Write-Host " No. | $("ShortId".PadRight($iMaxLengthShortId, " ")) | $("DateTime".PadRight($iMaxLengthDateTime, " ")) | $("Tags".PadRight($iMaxLengthTags, " ")) | $("No. Files".PadRight($iMaxLengthTotalFileBackup, " ")) | $("Total Files Size".PadRight($iMaxLengthFileSize, " ")) | $("No. Blobs".PadRight($iMaxLengthTotalBlob, " ")) | $("Total Blobs Size".PadRight($iMaxLengthBlobSize, " ")) | $("Ratio".PadRight($iMaxLengthRatio, " "))" -ForegroundColor Green
+    Write-Host " --- | $("-".PadRight($iMaxLengthShortId, "-")) | $("-".PadRight($iMaxLengthDateTime, "-")) | $("-".PadRight($iMaxLengthTags, "-")) | $("-".PadRight($iMaxLengthTotalFileBackup, "-")) | $("-".PadRight($iMaxLengthFileSize, "-")) | $("-".PadRight($iMaxLengthTotalBlob, "-")) | $("-".PadRight($iMaxLengthBlobSize, "-")) | $("-".PadRight($iMaxLengthRatio, "-"))" -ForegroundColor Green
+
+    $Choices | ForEach-Object {
+        Write-Host " $(($counter++).ToString().PadLeft($iMaxLengthNumber, " ")) | $($PSItem.ShortId.PadRight($iMaxLengthShortId, " ")) | $($PSItem.DateTime.ToString().PadLeft($iMaxLengthDateTime, " ")) | $($PSItem.Tags.PadRight($iMaxLengthTags, " ")) | $($PSItem.TotalFileBackup.ToString().PadLeft($iMaxLengthTotalFileBackup, " ")) | $($PSItem.FileSizeInString().PadRight($iMaxLengthFileSize, " ")) | $($PSItem.TotalBlob.ToString().PadLeft($iMaxLengthTotalBlob, " ")) | $($PSItem.BlobSizeInString().PadRight($iMaxLengthBlobSize, " ")) | $($PSItem.Ratio.ToString().PadRight($iMaxLengthRatio, " "))"
+    }
+
+    ShowMessage "OTHER" ""
+
+    do {
+        If ($bFirstLoop) {
+            $bFirstLoop = $False
+        } Else {
+            Write-Host "`nBad choice! Please type a number of the 'No.' column" -ForegroundColor Red
+        }
+
+        $selection = [int](Read-Host -Prompt $Message)
+    } While ($selection -lt 1 -or $selection -gt $Choices.Count)
+
+    Return $selection-1
+}
+
+#TODO: Help header
 function Get-SnapshotsList {
     <#
         .SYNOPSIS
@@ -561,17 +656,123 @@ function Get-SnapshotsList {
     return $jsonSnapshotsList
 }
 
+#TODO: header
+function Get-SnapshotDetails {
+    <#
+        .SYNOPSIS
+            Summary of the script
+        .DESCRIPTION
+            Script description
+        .PARAMETER param1
+            Parameter description
+        .INPUTS
+            Pipeline input data
+        .OUTPUTS
+            Output data
+        .EXAMPLE
+            .\template.ps1 param1
+        .NOTES
+            Name           : Script-Name
+            Version        : 1.0.0.1
+            Created by     : Chucky2401
+            Date Created   : 27/07/2022
+            Modify by      : Chucky2401
+            Date modified  : 27/07/2022
+            Change         : Creation
+            Copy           : Copy-Item .\Script-Name.ps1 \Final\Path\Script-Name.ps1 -Force
+        .LINK
+            http://github.com/UserName/RepoName
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        $Snapshot
+    )
+    
+    $oSnapshotStats = Get-ResticStats -SnapshotId $Snapshot.Id
+    
+    $sbFileSizeInString = {
+        $sSizeInString = ""
+        $deBest = $this.TotalFileSize.GetEnumerator() | Where-Object { $_.Value -lt 1024 -and $_.Value -ge 1 }
+        $sUnity = $deBest.Key
+        $sValue = $deBest.Value
+
+        switch ($sUnity) {
+            "SizeInByte" { $sSizeInString = "$($sValue) B" }
+            "SizeInKByte" { $sSizeInString = "$($sValue) KiB" }
+            "SizeInMByte" { $sSizeInString = "$($sValue) MiB" }
+            "SizeInGByte" { $sSizeInString = "$($sValue) GiB" }
+            Default { $sSizeInString = "$($this.TotalFileSize.SizeInGByte) GiB" }
+        }
+        
+        return $sSizeInString
+    }
+
+    $sbBlobSizeInString = {
+        $sSizeInString = ""
+        $deBest = $this.TotalBlobSize.GetEnumerator() | Where-Object { $_.Value -lt 1024 -and $_.Value -ge 1 }
+        $sUnity = $deBest.Key
+        $sValue = $deBest.Value
+
+        switch ($sUnity) {
+            "SizeInByte" { $sSizeInString = "$($sValue) B" }
+            "SizeInKByte" { $sSizeInString = "$($sValue) KiB" }
+            "SizeInMByte" { $sSizeInString = "$($sValue) MiB" }
+            "SizeInGByte" { $sSizeInString = "$($sValue) GiB" }
+            Default { $sSizeInString = "$($this.TotalBlobSize.SizeInGByte) GiB" }
+        }
+        
+        return $sSizeInString
+    }
+
+    # Pram Add-Member
+    $hFileSizeInString = @{
+        MemberType = "ScriptMethod"
+        Name = "FileSizeInString"
+        Value = $sbFileSizeInString
+    }
+    
+    $hBlobSizeInString = @{
+        MemberType = "ScriptMethod"
+        Name = "BlobSizeInString"
+        Value = $sbBlobSizeInString
+    }
+
+    $oSnapshotDetails   = [PSCustomObject]@{
+        PSTypeName      = 'Tjvs.Restic.SnapshotsStats'
+        Game            = $Snapshot.Game
+        Id              = $Snapshot.Id
+        ShortId         = $Snapshot.ShortId
+        Tree            = $Snapshot.Tree
+        Parent          = $Snapshot.Parent
+        DateTime        = $Snapshot.DateTime
+        Tags            = $Snapshot.Tags
+        Paths           = $Snapshot.Paths
+        Hostname        = $Snapshot.Hostname
+        Username        = $Snapshot.Username
+        TotalFileBackup = $oSnapshotStats.TotalFileBackup
+        TotalFileSize   = $oSnapshotStats.TotalFileSize
+        TotalBlob       = $oSnapshotStats.TotalBlob
+        TotalBlobSize   = $oSnapshotStats.TotalBlobSize
+        Ratio           = $oSnapshotStats.Ratio
+    }
+
+    $oSnapshotDetails | Add-Member @hFileSizeInString
+    $oSnapshotDetails | Add-Member @hBlobSizeInString
+
+    return $oSnapshotDetails
+}
+
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 $htSettings = Get-Settings "$($PSScriptRoot)\conf\Get-ResticGameSnapshots.ps1.ini"
 
-$sPasswordFile        = New-TemporaryFile
-#$ResticGamesList      = New-TemporaryFile
-#$ResticGamesListError = New-TemporaryFile
+$sPasswordFile = New-TemporaryFile
 
 # Restic Info
 ## Process
-$sCommonResticArguments    = "-r `"$($htSettings['RepositoryPath'])`" --password-file `"$sPasswordFile`" --json"
+$sCommonResticArguments    = "-r `"$($htSettings['RepositoryPath'])`" --password-file `"$sPasswordFile`""
 
 # Logs
 $sLogPath = "$($PSScriptRoot)\logs"
@@ -580,6 +781,9 @@ If ($PSBoundParameters['Debug']) {
     $sLogName = "DEBUG-$($sLogName)"
 }
 $sLogFile = "$($sLogPath)\$($sLogName)"
+
+$aSnapshotListDetails = @()
+$cntDetails           = 0
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -602,21 +806,22 @@ If ($htSettings['ResticPassordFile'] -eq "manual" -or $htSettings['ResticPassord
 $oCredentials = New-Object System.Management.Automation.PSCredential('restic', $sSecurePassword)
 $oCredentials.GetNetworkCredential().Password | Out-File $sPasswordFile
 
+ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+
 # List games
-#$oResticProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) snapshots" -RedirectStandardOutput $ResticGamesList -RedirectStandardError $ResticGamesListError -WindowStyle Hidden -Wait -PassThru
-$oResticProcess = Start-Command -Title "Restic Snapshots" -FilePath restic -ArgumentList "$($sCommonResticArguments) snapshots"
+ShowLogMessage "INFO" "Retrieve game in Restic repository..." ([ref]$sLogFile)
+$oResticProcess = Start-Command -Title "Restic Snapshots" -FilePath restic -ArgumentList "$($sCommonResticArguments) --json snapshots"
 
 If ($oResticProcess.ExitCode -eq 0) {
-    #$jsResultRestic = Get-Content $ResticGamesList | ConvertFrom-Json
     $jsResultRestic = $oResticProcess.stdout | ConvertFrom-Json
     $aListGames = $jsResultRestic | Select-Object tags | ForEach-Object {
         $PSItem.tags[0]
     } | Select-Object -Unique | Sort-Object
+    ShowLogMessage "SUCCESS" "Games have been retrieved!" ([ref]$sLogFile)
 } Else {
     ShowLogMessage "ERROR" "Not able to get games list! (Exit code: $($oResticProcess.ExitCode)" ([ref]$sLogFile)
     If ($PSBoundParameters['Debug']) {
         ShowLogMessage "DEBUG" "Error detail:" ([ref]$sLogFile)
-        #Get-Content $ResticSnapshotsListError | Where-Object { $PSItem -ne "" } | ForEach-Object {
         $oResticProcess.stderr | Where-Object { $PSItem -ne "" } | ForEach-Object {
             ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
         }
@@ -626,9 +831,13 @@ If ($oResticProcess.ExitCode -eq 0) {
     exit 1
 }
 
-$sChooseGame = $aListGames[(Read-GameChoice -Title "Which game do you want to see the save?" -Message "Choose game" -Choices $aListGames)]
-#Write-Host "`nYou choose: $($sChooseGame)"
+ShowLogMessage "OTHER" "" ([ref]$sLogFile)
 
+$sChooseGame = $aListGames[(Read-GameChoice -Title "For which game do you want to see the saves?" -Message "Choose game" -Choices $aListGames)]
+
+ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+
+ShowLogMessage "INFO" "Retrieve snapshots for $($sChooseGame)..." ([ref]$sLogFile)
 $oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
 <#
  # Game        NoteProperty string Game=Elden Ring
@@ -643,17 +852,33 @@ $oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
  # Username    NoteProperty string Username=ZOUKZOUK\The Black Wizard
  #>
 
-$oSnapshotsList
+$oSnapshotsList | ForEach-Object {
+    $iPercentComplete = [Math]::Round(($cntDetails/$oSnapshotsList.Length)*100,2)
+    Write-Progress -Activity "Retrieve snapshot details for $($sChooseGame) | $($cntDetails+1)/$($oSnapshotsList.Length) ($($iPercentComplete)%)..." -PercentComplete $iPercentComplete -Status "Retrieve detail for $($PSItem.ShortId)..."
 
-Write-CenterText "*********************************" $sLogFile
-Write-CenterText "*                               *" $sLogFile
-Write-CenterText "*      List Game Snapshot       *" $sLogFile
-Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-Write-CenterText "*           End $(Get-Date -Format 'HH:mm')           *" $sLogFile
-Write-CenterText "*                               *" $sLogFile
-Write-CenterText "*********************************" $sLogFile
+    $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem
+    $aSnapshotListDetails += $oSnapshotDetailStats
+
+    $cntDetails++
+}
+Write-Progress -Activity "Snapshot details retrieved!" -Completed
+
+ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+
+ShowLogMessage "OTHER" "Snapshot for $($sChooseGame)" ([ref]$sLogFile)
+
+#$oChooseSnapshot = $aSnapshotListDetails[(Read-SnapshotChoice -Choices $aSnapshotListDetails -Title "Choose a snpashot" -Message "Which Snapshot ?")]
+#$oChooseSnapshot | Format-Table -AutoSize
+
+#Write-CenterText "*********************************" $sLogFile
+#Write-CenterText "*                               *" $sLogFile
+#Write-CenterText "*      List Game Snapshot       *" $sLogFile
+#Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
+#Write-CenterText "*           End $(Get-Date -Format 'HH:mm')           *" $sLogFile
+#Write-CenterText "*                               *" $sLogFile
+#Write-CenterText "*********************************" $sLogFile
 
 # Remove temporary file
 Remove-Item $sPasswordFile
-#Remove-Item $ResticGamesList
-#Remove-Item $ResticGamesListError
+
+$aSnapshotListDetails

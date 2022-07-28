@@ -10,29 +10,31 @@ function Get-ResticStats {
             Get-ResticStats
         .NOTES
             Name           : Get-ResticStats
-            Version        : 1.1.2
+            Version        : 1.1.3
             Created by     : Chucky2401
             Date created   : 07/07/2022
             Modified by    : Chucky2401
             Date modified  : 27/07/2022
-            Change         : Use Start-Command instead of Start-Process + Rename
+            Change         : Can pass a snapshot Id (short or long)
     #>
     [CmdletBinding()]
     Param (
+        [Parameter(Mandatory = $false)]
+        [String]$SnapshotId = $null
     )
 
     ## File
-    $oStats = Start-Command -Title "Restic Stats" -FilePath restic -ArgumentList "$($sCommonResticArguments) stats"
+    $oStats = Start-Command -Title "Restic Stats" -FilePath restic -ArgumentList "$($sCommonResticArguments) stats $($SnapshotId)"
     $sRepoDataSize  = $oStats.stdout.Split("`n") | Select-Object -Skip 2
 
     ## Blob
-    $oRawStats = Start-Command -Title "Restic Raw Stats" -FilePath restic -ArgumentList "$($sCommonResticArguments) stats --mode raw-data"
+    $oRawStats = Start-Command -Title "Restic Raw Stats" -FilePath restic -ArgumentList "$($sCommonResticArguments) stats $($SnapshotId) --mode raw-data"
     $sRepoBlobSize  = $oRawStats.stdout.Split("`n") | Select-Object -Skip 2
 
     # Scripts block
     $sbFileSizeInString = {
         $sSizeInString = ""
-        $deBest = $this.TotalFileSize.GetEnumerator() | Where-Object { $_.Value -lt 1024 -and $_.Value -gt 0 }
+        $deBest = $this.TotalFileSize.GetEnumerator() | Where-Object { $_.Value -lt 1024 -and $_.Value -ge 1 }
         $sUnity = $deBest.Key
         $sValue = $deBest.Value
 
@@ -49,7 +51,7 @@ function Get-ResticStats {
 
     $sbBlobSizeInString = {
         $sSizeInString = ""
-        $deBest = $this.TotalBlobSize.GetEnumerator() | Where-Object { $_.Value -lt 1024 -and $_.Value -gt 0 }
+        $deBest = $this.TotalBlobSize.GetEnumerator() | Where-Object { $_.Value -lt 1024 -and $_.Value -ge 1 }
         $sUnity = $deBest.Key
         $sValue = $deBest.Value
 
