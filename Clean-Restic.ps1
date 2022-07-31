@@ -5,6 +5,8 @@
         This script permit to remove restic snapshots for a game and to keep a certain amout of snapshots (by default: 5)
     .PARAMETER Game
         Game name of snapshots to delete
+    .PARAMETER TagFilter
+        A filter on the snapshots to retrieve for the game
     .PARAMETER SnapshotToKeep
         Number of snapshots to keep (by default: 5)
     .PARAMETER NoDelete
@@ -22,12 +24,12 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 1.0.0.21
+        Version        : 1.2.0
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 08/07/2022
-        Change         : Final version
+        Date modified  : 31/07/2022
+        Change         : Add filter
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
@@ -40,6 +42,9 @@ Param (
     [ValidateNotNullOrEmpty()]
     [Alias("g")]
     [string[]]$Game,
+    [Parameter(Mandatory = $false)]
+    [Alias("f")]
+    [string]$TagFilter = "",
     [Parameter(Mandatory = $false)]
     [Alias("stk")]
     [int]$SnapshotToKeep = 5,
@@ -463,10 +468,10 @@ BEGIN {
         )
 
         ## File
-        Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
+        $oProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
         $sRepoDataSize  = Get-Content $ResticResultStatsBefore | Select-Object -Skip 2
         ## Blob
-        Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats --mode raw-data" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
+        $oProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats --mode raw-data" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
         $sRepoBlobSize  = Get-Content $ResticResultStatsBefore | Select-Object -Skip 2
 
         # Scripts block
@@ -572,6 +577,10 @@ BEGIN {
     # Restic Info
     ## Process
     $sCommonResticArguments    = "-r `"$($htSettings['RepositoryPath'])`" --password-file `"$sPasswordFile`""
+    $sFilter                   = "--tag `"$sGame`""
+    If ($TagFilter -ne "") {
+        $sFilter += ",`"$($TagFilter)`""
+    }
     
     # Logs
     $sLogPath                 = "$($PSScriptRoot)\logs"
@@ -613,7 +622,7 @@ PROCESS {
 
     foreach ($sGame in $Game) {
         ShowLogMessage "INFO" "Get snapshots list for $($sGame) from Restic in JSON..." ([ref]$sLogFile)
-        $oResticProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) snapshots --tag `"$sGame`" --json" -RedirectStandardOutput $ResticSnapshotsList -RedirectStandardError $ResticSnapshotsListError -WindowStyle Hidden -Wait -PassThru
+        $oResticProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) snapshots $($sFilter) --json" -RedirectStandardOutput $ResticSnapshotsList -RedirectStandardError $ResticSnapshotsListError -WindowStyle Hidden -Wait -PassThru
         
         If ($oResticProcess.ExitCode -eq 0) {
             ShowLogMessage "SUCCESS" "We got them!" ([ref]$sLogFile)
