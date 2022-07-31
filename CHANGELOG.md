@@ -1,5 +1,17 @@
 # Changelog
 
+## 2022.07.31
+
+### New
+
+- Add the parameter **TagFilter** to filter snapshot of the game in **Clean-Restic**
+- Add the help header in **Get-ResticGameSnapshots** to be able to use `Get-Help` PowerShell cmdlet
+
+### Log
+
+- **d3126d8**: Filtering
+- **8965e73**: Help
+
 ## 2022.07.28
 
 ### New
@@ -15,7 +27,6 @@
 - Add function **Get-SnapshotDetail** to retrieve stats about a snapshot
 - Get snapshots stats in a new array
 - Add **Tjvs.Restic.SnapshotsStats** in `.\inc\Format\ResticControl.format.ps1xml`
-- Add the parameter **TagFilter** to filter snapshot of the game in **Clean-Restic**
 
 ### Change
 
