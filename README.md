@@ -38,6 +38,7 @@ This first script help me to clean my Restic repository for a specific game.
 It takes **at least the game name** as parameter. This parameter is used to filter **Restic snapshots by tag**.
 You have three more optional parameters:
 
+- **TagFilter** *(string)*: Let you filter the snapshots of the game.
 - **SnapshotToKeep** *(string[])*: by default set on 5. You can specify how many snapshots you want to keep.
 - **NoDelete** *(switch)*: if you want to run the script without delete any snapshots, like a dry run.
 - **NoStats** *(switch)*: if you don't want the script show you the stats about your repository
