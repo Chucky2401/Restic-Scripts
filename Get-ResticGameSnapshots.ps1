@@ -1,25 +1,21 @@
 <#
     .SYNOPSIS
-        Summary of the script
+        List the snapshots of a game in Restic
     .DESCRIPTION
-        Script description
-    .PARAMETER param1
-        Parameter description
-    .INPUTS
-        Pipeline input data
+        Ask you the game you want to see snapshots in Restic (get them from Restic directly).
+        After your choice, show you all the information and details about the snapshots
     .OUTPUTS
-        Output data
+        Logs actions in case of crash
     .EXAMPLE
-        .\template.ps1 param1
+        .\Get-ResticGameSnapshots.ps1
     .NOTES
-        Name           : Script-Name
-        Version        : 1.0.0.1
+        Name           : Get-ResticGameSapshots
+        Version        : 1.0.0.beta.2
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 25/07/2022
-        Change         : Creation
-        Copy           : Copy-Item .\Script-Name.ps1 \Final\Path\Script-Name.ps1 -Force
+        Date modified  : 31/07/2022
+        Change         : Help header
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
