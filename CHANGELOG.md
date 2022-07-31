@@ -15,6 +15,7 @@
 - Add function **Get-SnapshotDetail** to retrieve stats about a snapshot
 - Get snapshots stats in a new array
 - Add **Tjvs.Restic.SnapshotsStats** in `.\inc\Format\ResticControl.format.ps1xml`
+- Add the parameter **TagFilter** to filter snapshot of the game in **Clean-Restic**
 
 ### Change
 
@@ -43,6 +44,7 @@
 - **fdd75d6**: Get-ResticGameSnapshots
 - **c905ded**: Start-Command + stats func
 - **f145b29**: Snapshots info
+
 
 ## 2022.07.18
 
