@@ -42,6 +42,7 @@
 - **cabe2ca**: Reorganization + Snapshots list
 - **fdd75d6**: Get-ResticGameSnapshots
 - **c905ded**: Start-Command + stats func
+- **f145b29**: Snapshots info
 
 ## 2022.07.18
 
