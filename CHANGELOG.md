@@ -1,5 +1,26 @@
 # Changelog
 
+## 2022.12.13
+
+### Change
+
+- Use the parameter `--password-command` instead of `--password-file` in the restic parameters
+  - The clear command is `Write-Host $($oCredentials.GetNetworkCredential().Password)` ; It is encoded before set in the variable to be able to use it
+- Replace all shared function write directly in scripts by different modules
+  - **Tjvs.Message**: functions used to write or out message respectively on the console or in file
+  - **Tjvs.Process**: functions to work with the process *restic*
+  - **Tjvs.Restic**: functions to get information or convert information from *restic*
+  - **Tjvs.Settings**: functions to work with the settings of the scripts
+- Use a shared settings file instead of one by script, as the settings are the same
+
+### Log
+
+- **9eab4a7** *feat(main)*: Password passed to Restic
+- **eef2897** *feat(main)*: PowerShell modules
+- **58fdbbd** *feat(main)*: Use a shared settings file instead of one
+
+---
+
 ## 2022.07.31
 
 ### New
@@ -11,6 +32,8 @@
 
 - **d3126d8**: Filtering
 - **8965e73**: Help
+
+---
 
 ## 2022.07.28
 
@@ -56,6 +79,7 @@
 - **c905ded**: Start-Command + stats func
 - **f145b29**: Snapshots info
 
+---
 
 ## 2022.07.18
 
