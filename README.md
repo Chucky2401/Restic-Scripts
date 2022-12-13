@@ -85,7 +85,9 @@ If you use the parameter `NoDelete` you will only have the current stats of your
 This script has only been testing with:
 
 - [**PowerShell Core** 7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
-- [**Restic** restic 0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
+- **Restic**
+  - [0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
+  - [0.14.0 compiled with go1.19 on windows/amd64](https://restic.net)
 
 #### Clean-Restic - How to use
 
@@ -96,7 +98,7 @@ The most important part of this Readme!
 3. Open a PowerShell Console, and use this command to create the file: `Read-Host "Enter New Password" -AsSecureString |  ConvertFrom-SecureString | Out-File D:\Restic.txt`
 *Change `D:\Restic.txt` by the path and the filename of your choice.*
 4. Type your password and validate by `Enter`
-5. Open the file `conf\Clean-Restic.ps1.ini` and edit the variables as below:
+5. Open the file `conf\settings.ini` and edit the variables as below:
    - **ResticPasswordFile**: The path to the file you set on step 3. If you leave it empty or type **manual** you will have to type it at the beginning of the script.
    - **RepositoryPath**: The path to your Restic repository
 6. Run the script in a PowerShell console!
@@ -154,7 +156,9 @@ Raft 8940034c 11/07/2022 16:50:06 stopped        29         2.83 MiB        30  
 This script has only been testing with:
 
 - [**PowerShell Core** 7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
-- [**Restic** restic 0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
+- **Restic**
+  - [0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
+  - [0.14.0 compiled with go1.19 on windows/amd64](https://restic.net)
 
 #### Get-ResticGameSnapshots - How to use
 
