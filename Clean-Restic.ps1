@@ -24,12 +24,13 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 1.2.0
+        Version        : 1.2.1
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 31/07/2022
-        Change         : Add filter
+        Date modified  : 13/12/2022
+        Change         : Use --password-command instead of --password-file
+                         Use module for common functions
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
@@ -62,509 +63,21 @@ BEGIN {
     #Set Error Action to Silently Continue
     $ErrorActionPreference = "SilentlyContinue"
 
-    Update-FormatData -AppendPath "$($PSScriptRoot)\inc\ResticControl.format.ps1xml"
+    Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
+
+    Import-Module -Name ".\inc\func\Tjvs.Message"
+    Import-Module -Name ".\inc\func\Tjvs.Process"
+    Import-Module -Name ".\inc\func\Tjvs.Restic"
+    Import-Module -Name ".\inc\func\Tjvs.Settings"
 
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
-
-    function LogMessage {
-        <#
-            .SYNOPSIS
-                Adds a message to a log file
-            .DESCRIPTION
-                This function adds a message to a log file.
-                It also displays the date and time at the beginning of the line, followed by the message type in brackets.
-            .PARAMETER type
-                Type de message :
-                    INFO        : Informative message
-                    WARNING     : Warning message
-                    ERROR       : Error message
-                    SUCCESS     : Success message
-                    DEBUG       : Debugging message
-                    OTHER       : Informative message but without the date and type at the beginning of the line
-            .PARAMETER message
-                Message to be logged
-            .PARAMETER sLogFile
-                String or variable reference indicating the location of the log file.
-                It is possible to send a variable of type Array() so that the function returns the string. See Example 3 for usage in this case.
-            .EXAMPLE
-                LogMessage "INFO" "File recovery..." ([ref]sLogFile)
-            .EXAMPLE
-                LogMessage "WARNING" "Process not found" ([ref]sLogFile)
-            .EXAMPLE
-                aTexte = @()
-                LogMessage "WARNING" "Process not found" ([ref]aTexte)
-            .NOTES
-                Name           : LogMessage
-                Created by     : Chucky2401
-                Date created   : 01/01/2019
-                Modified by    : Chucky2401
-                Date modified  : 02/06/2022
-                Change         : Translate to english
-        #>
-        [cmdletbinding()]
-        Param (
-            [Parameter(Mandatory = $true)]
-            [Alias("t")]
-            [ValidateSet("INFO", "WARNING", "ERROR", "SUCCESS", "DEBUG", "OTHER", IgnoreCase = $false)]
-            [string]$type,
-            [Parameter(Mandatory = $true)]
-            [AllowEmptyString()]
-            [Alias("m")]
-            [string]$message,
-            [Parameter(Mandatory = $true)]
-            [Alias("l")]
-            [ref]$sLogFile
-        )
-
-        $sDate = Get-Date -UFormat "%d.%m.%Y - %H:%M:%S"
-    
-        Switch ($type) {
-            "INFO" {
-                $sSortie = "[$($sDate)] (INFO)    $($message)"
-                Break
-            }
-            "WARNING" {
-                $sSortie = "[$($sDate)] (WARNING) $($message)"
-                Break
-            }
-            "ERROR" {
-                $sSortie = "[$($sDate)] (ERROR)   $($message)"
-                Break
-            }
-            "SUCCESS" {
-                $sSortie = "[$($sDate)] (SUCCESS) $($message)"
-                Break
-            }
-            "DEBUG" {
-                $sSortie = "[$($sDate)] (DEBUG)   $($message)"
-                Break
-            }
-            "OTHER" {
-                $sSortie = "$($message)"
-                Break
-            }
-        }
-
-        If ($sLogFile.Value.GetType().Name -ne "String") {
-            $sLogFile.Value += $sSortie
-        } Else {
-            Write-Output $sSortie >> $sLogFile.Value
-        }
-    }
-
-    function ShowMessage {
-    <#
-            .SYNOPSIS
-                Displays a message
-            .DESCRIPTION
-                This function displays a message with a different colour depending on the type of message.
-                It also displays the date and time at the beginning of the line, followed by the message type in brackets.
-            .PARAMETER type
-                Type de message :
-                    INFO        : Informative message in blue
-                    WARNING     : Warning message in yellow
-                    ERROR       : Error message in red
-                    SUCCESS     : Success message in green
-                    DEBUG       : Debugging message in blue on black background
-                    OTHER       : Informative message in blue but without the date and type at the beginning of the line
-            .PARAMETER message
-                Message to be displayed
-            .EXAMPLE
-                ShowLogMessage "INFO" "File recovery..."
-            .EXAMPLE
-                ShowLogMessage "WARNING" "Process not found"
-            .NOTES
-                Name           : ShowMessage
-                Created by     : Chucky2401
-                Date created   : 01/01/2019
-                Modified by    : Chucky2401
-                Date modified  : 07/04/2021
-                Change         : Translate to english
-    #>
-        [cmdletbinding()]
-        Param (
-            [Parameter(Mandatory = $true)]
-            [Alias("t")]
-            [ValidateSet("INFO", "WARNING", "ERROR", "SUCCESS", "DEBUG", "OTHER", IgnoreCase = $false)]
-            [string]$type,
-            [Parameter(Mandatory = $true)]
-            [AllowEmptyString()]
-            [Alias("m")]
-            [string]$message
-        )
-
-        $sDate = Get-Date -UFormat "%d.%m.%Y - %H:%M:%S"
-    
-        switch ($type) {
-            "INFO" {
-                Write-Host "[$($sDate)] (INFO)    $($message)" -ForegroundColor Cyan
-                Break
-            }
-            "WARNING" {
-                Write-Host "[$($sDate)] (WARNING) $($message)" -ForegroundColor White -BackgroundColor Black
-                Break
-            }
-            "ERROR" {
-                Write-Host "[$($sDate)] (ERROR)   $($message)" -ForegroundColor Red
-                Break
-            }
-            "SUCCESS" {
-                Write-Host "[$($sDate)] (SUCCESS) $($message)" -ForegroundColor Green
-                Break
-            }
-            "DEBUG" {
-                Write-Host "[$($sDate)] (DEBUG)   $($message)" -ForegroundColor Cyan -BackgroundColor Black
-                Break
-            }
-            "OTHER" {
-                Write-Host "$($message)"
-                Break
-            }
-            default {
-                Write-Host "[$($sDate)] (INFO)    $($message)" -ForegroundColor Cyan
-            }
-        }
-    }
-
-    function ShowLogMessage {
-    <#
-            .SYNOPSIS
-                Displays a message and adds it to a log file
-            .DESCRIPTION
-                This function displays a message with a different colour depending on the type of message, and logs the same message to a log file.
-                It also displays the date and time at the beginning of the line, followed by the type of message in brackets.
-            .PARAMETER type
-                Type de message :
-                    INFO    : Informative message in blue
-                    WARNING : Warning message in yellow
-                    ERROR   : Error message in red
-                    SUCCESS : Success message in green
-                    DEBUG   : Debugging message in blue on black background
-                    OTHER   : Informative message in blue but without the date and type at the beginning of the line
-            .PARAMETER message
-                Message to be displayed
-            .PARAMETER sLogFile
-                String or variable reference indicating the location of the log file.
-                It is possible to send a variable of type Array() so that the function returns the string. See Example 3 for usage in this case.
-            .EXAMPLE
-                ShowLogMessage "INFO" "File recovery..." ([ref]sLogFile)
-            .EXAMPLE
-                ShowLogMessage "WARNING" "Process not found" ([ref]sLogFile)
-            .EXAMPLE
-                aTexte = @()
-                ShowLogMessage "WARNING" "Processus introuvable" ([ref]aTexte)
-            .NOTES
-                Name           : ShowLogMessage
-                Created by     : Chucky2401
-                Date created   : 01/01/2019
-                Modified by    : Chucky2401
-                Date modified  : 02/06/2022
-                Change         : Translate to english
-    #>
-        [cmdletbinding()]
-        Param (
-            [Parameter(Mandatory = $true)]
-            [Alias("t")]
-            [ValidateSet("INFO", "WARNING", "ERROR", "SUCCESS", "DEBUG", "OTHER", IgnoreCase = $false)]
-            [string]$type,
-            [Parameter(Mandatory = $true)]
-            [AllowEmptyString()]
-            [Alias("m")]
-            [string]$message,
-            [Parameter(Mandatory = $true)]
-            [Alias("l")]
-            [ref]$sLogFile
-        )
-
-        $sDate = Get-Date -UFormat "%d.%m.%Y - %H:%M:%S"
-    
-        Switch ($type) {
-            "INFO" {
-                $sSortie = "[$($sDate)] (INFO)    $($message)"
-                Write-Host $sSortie -ForegroundColor Cyan
-                Break
-            }
-            "WARNING" {
-                $sSortie = "[$($sDate)] (WARNING) $($message)"
-                Write-Host $sSortie -ForegroundColor White -BackgroundColor Black
-                Break
-            }
-            "ERROR" {
-                $sSortie = "[$($sDate)] (ERROR)   $($message)"
-                Write-Host $sSortie -ForegroundColor Red
-                Break
-            }
-            "SUCCESS" {
-                $sSortie = "[$($sDate)] (SUCCESS) $($message)"
-                Write-Host $sSortie -ForegroundColor Green
-                Break
-            }
-            "DEBUG" {
-                $sSortie = "[$($sDate)] (DEBUG)   $($message)"
-                Write-Host $sSortie -ForegroundColor Cyan -BackgroundColor Black
-                Break
-            }
-            "OTHER" {
-                $sSortie = "$($message)"
-                Write-Host $sSortie
-                Break
-            }
-        }
-
-        If ($sLogFile.Value.GetType().Name -ne "String") {
-            $sLogFile.Value += $sSortie
-        } Else {
-            Write-Output $sSortie >> $sLogFile.Value
-        }
-    }
-
-    function Write-CenterText {
-        <#
-            .SYNOPSIS
-                Displays a centred message on the screen
-            .DESCRIPTION
-                This function takes care of displaying a message by centring it on the screen.
-                It is also possible to add it to a log.
-            .PARAMETER sString
-                Character string to be centred on the screen
-            .PARAMETER sLogFile
-                String indicating the location of the log file
-            .EXAMPLE
-                Write-CenterText "File Recovery..."
-            .EXAMPLE
-                Write-CenterText "Process not found" C:\Temp\restauration.log
-            .NOTES
-                Name           : Write-CenterText
-                Created by     : Chucky2401
-                Date created   : 01/01/2021
-                Modified by    : Chucky2401
-                Date modified  : 02/06/2022
-                Change         : Translate to english
-        #>
-        [CmdletBinding()]
-        Param (
-            [Parameter(Position=0,Mandatory=$true)]
-            [string]$sString,
-            [Parameter(Position=1,Mandatory=$false)]
-            [string]$sLogFile = $null
-        )
-        $nConsoleWidth    = (Get-Host).UI.RawUI.MaxWindowSize.Width
-        $nStringLength    = $sChaine.Length
-        $nPaddingSize     = "{0:N0}" -f (($nConsoleWidth - $nStringLength) / 2)
-        $nSizePaddingLeft = $nPaddingSize / 1 + $nStringLength
-        $sFinalString     = $sChaine.PadLeft($nSizePaddingLeft, " ").PadRight($nSizePaddingLeft, " ")
-    
-        Write-Host $sFinalString
-        If ($null -ne $sLogFile) {
-            Write-Output $sFinalString >> $sLogFile
-        }
-    }
-
-    function Get-Settings {
-        <#
-            .SYNOPSIS
-                Get settings from ini file
-            .DESCRIPTION
-                Return as a hashtable the settings from an ini file
-            .PARAMETER File
-                Path of the settings file
-            .OUTPUTS
-                Settings as a hashtable
-            .EXAMPLE
-                Get-Settings "D:\Utilisateurs\TheBlackWizard\Jeux\Backup\Playnite\Scripts\Clean-Restic.ps1.ini"
-            .NOTES
-                Name           : Get-Settings
-                Created by     : Chucky2401
-                Date created   : 08/07/2022
-                Modified by    : Chucky2401
-                Date modified  : 08/07/2022
-                Change         : Creating
-        #>
-        [CmdletBinding()]
-        Param (
-            [Parameter(Position=0,Mandatory=$true)]
-            [string]$File
-        )
-
-        $htSettings = @{}
-
-        Get-Content $File | Where-Object { $PSItem -notmatch "^;|^\[" -and $PSItem -ne "" } | ForEach-Object {
-            $aLine = [regex]::Split($PSItem, '=')
-            $htSettings.Add($aLine[0].Trim(), $aLine[1].Trim())
-        }
-
-        Return $htSettings
-    }
-
-    function ConvertTo-HashtableSize {
-        <#
-            .SYNOPSIS
-                Returns the size in different units
-            .DESCRIPTION
-                Function to return the size in different units (B, KiB, MiB, GiB)
-            .PARAMETER Size
-                Size currently known
-            .PARAMETER Unity
-                String containing the unit of the currently known size
-            .OUTPUTS
-                Hashtable of size in different units
-            .EXAMPLE
-                ConvertTo-HashtableSize $iTotalFilesSize $sTotalFileSizeUnity
-            .NOTES
-                Name           : ConvertTo-HashtableSize
-                Created by     : Chucky2401
-                Date created   : 07/07/2022
-                Modified by    : Chucky2401
-                Date modified  : 07/07/2022
-                Change         : Created
-        #>
-        [CmdletBinding()]
-        Param (
-            [Parameter(Position=0,Mandatory=$true)]
-            [float]$Size,
-            [Parameter(Position=1,Mandatory=$true)]
-            [string]$Unity
-        )
-
-        $fSizeInByte = 0.0
-
-        switch ($Unity) {
-            "KiB" { $fSizeInByte = $Size*1KB }
-            "MiB" { $fSizeInByte = $Size*1MB }
-            "GiB" { $fSizeInByte = $Size*1GB }
-            Default { $fSizeInByte = $Size }
-        }
-
-        $aSizes = @{
-            SizeInByte  = $fSizeInByte
-            SizeInKByte = [Math]::Round($fSizeInByte/1KB, 2)
-            SizeInMByte = [Math]::Round($fSizeInByte/1MB, 2)
-            SizeInGByte = [Math]::Round($fSizeInByte/1GB, 2)
-        }
-
-        return $aSizes
-    }
-
-    function ConvertTo-ResticStatsCustomObject {
-        <#
-            .SYNOPSIS
-                Returns statistics from Restic
-            .DESCRIPTION
-                Function to build complete statistics on Restic based on the results of the stats commands
-            .OUTPUTS
-                PSCustomObject with all stats
-            .EXAMPLE
-                ConvertTo-ResticStatsCustomObject
-            .NOTES
-                Name           : ConvertTo-ResticStatsCustomObject
-                Created by     : Chucky2401
-                Date created   : 07/07/2022
-                Modified by    : Chucky2401
-                Date modified  : 07/07/2022
-                Change         : Creating
-        #>
-        [CmdletBinding()]
-        Param (
-        )
-
-        ## File
-        $oProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
-        $sRepoDataSize  = Get-Content $ResticResultStatsBefore | Select-Object -Skip 2
-        ## Blob
-        $oProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) stats --mode raw-data" -RedirectStandardOutput $ResticResultStatsBefore -WindowStyle Hidden -Wait -PassThru
-        $sRepoBlobSize  = Get-Content $ResticResultStatsBefore | Select-Object -Skip 2
-
-        # Scripts block
-        $sbFileSizeInString = {
-            $sSizeInString = ""
-            $deBest = $this.TotalFileSize.GetEnumerator() | Where-Object { $_.Value -lt 1024 -and $_.Value -gt 0 }
-            $sUnity = $deBest.Key
-            $sValue = $deBest.Value
-    
-            switch ($sUnity) {
-                "SizeInByte" { $sSizeInString = "$($sValue) B" }
-                "SizeInKByte" { $sSizeInString = "$($sValue) KiB" }
-                "SizeInMByte" { $sSizeInString = "$($sValue) MiB" }
-                "SizeInGByte" { $sSizeInString = "$($sValue) GiB" }
-                Default { $sSizeInString = "$($this.TotalFileSize.SizeInGByte) GiB" }
-            }
-            
-            return $sSizeInString
-        }
-
-        $sbBlobSizeInString = {
-            $sSizeInString = ""
-            $deBest = $this.TotalBlobSize.GetEnumerator() | Where-Object { $_.Value -lt 1024 -and $_.Value -gt 0 }
-            $sUnity = $deBest.Key
-            $sValue = $deBest.Value
-    
-            switch ($sUnity) {
-                "SizeInByte" { $sSizeInString = "$($sValue) B" }
-                "SizeInKByte" { $sSizeInString = "$($sValue) KiB" }
-                "SizeInMByte" { $sSizeInString = "$($sValue) MiB" }
-                "SizeInGByte" { $sSizeInString = "$($sValue) GiB" }
-                Default { $sSizeInString = "$($this.TotalBlobSize.SizeInGByte) GiB" }
-            }
-            
-            return $sSizeInString
-        }
-
-        # Pram Add-Member
-        $hFileSizeInString = @{
-            MemberType = "ScriptMethod"
-            Name = "FileSizeInString"
-            Value = $sbFileSizeInString
-        }
-        
-        $hBlobSizeInString = @{
-            MemberType = "ScriptMethod"
-            Name = "BlobSizeInString"
-            Value = $sbBlobSizeInString
-        }
-
-        # Parsing
-        $iNbrSnapshots       = [int]($sRepoDataSize[0].Split(':'))[1].Trim()
-        $iNbrFilesBackup     = [int]($sRepoDataSize[1].Split(':'))[1].Trim()
-        $sTotalFilesSize     = ($sRepoDataSize[2].Split(':'))[1].Trim()
-        $fTotalFilesSize     = [float]($sTotalFilesSize -replace "^(\d+\.?\d+).+", "`$1")
-        $sTotalFileSizeUnity = ($sTotalFilesSize -replace "^\d+\.?\d+(.+)", "`$1").Trim()
-        $iNbrBlob            = [int]($sRepoBlobSize[1].Split(':'))[1].Trim()
-        $sTotalBlobSize      = ($sRepoBlobSize[2].Split(':'))[1].Trim()
-        $fTotalBlobSize      = [float]($sTotalBlobSize -replace "^(\d+\.?\d+).+", "`$1")
-        $sTotalBlobSizeUnity = ($sTotalBlobSize -replace "^\d+\.?\d+(.+)",  "`$1").Trim()
-
-        # Size in hashtable
-        $htFileSize = ConvertTo-HashtableSize $fTotalFilesSize $sTotalFileSizeUnity
-        $htBlobSize = ConvertTo-HashtableSize $fTotalBlobSize $sTotalBlobSizeUnity
-
-        # Ratio
-        $fRatio = [Math]::Round($htBlobSize['SizeInByte']/$htFileSize['SizeInByte']*100, 2)
-
-        # Object creating
-        $oStats = [PSCustomObject]@{
-            PSTypeName             = 'Tjvs.Restic.Stats'
-            SnapshotNumber         = $iNbrSnapshots
-            TotalFileBackup        = $iNbrFilesBackup
-            TotalFileSize          = $htFileSize
-            TotalBlob              = $iNbrBlob
-            TotalBlobSize          = $htBlobSize
-            Ratio                  = $fRatio
-        }
-
-        # Adding method
-        $oStats | Add-Member @hFileSizeInString
-        $oStats | Add-Member @hBlobSizeInString
-
-        return $oStats
-    }
 
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
     # User settings
-    $htSettings = Get-Settings "$($PSScriptRoot)\conf\Clean-Restic.ps1.ini"
+    $htSettings = Get-Settings "$($PSScriptRoot)\conf\settings.ini"
 
     # Working Files
-    $sPasswordFile             = New-TemporaryFile
     $ResticSnapshotsList       = New-TemporaryFile
     $ResticSnapshotsListError  = New-TemporaryFile
     $ResticResultForget        = New-TemporaryFile
@@ -575,8 +88,14 @@ BEGIN {
     $ResticResultStats         = New-TemporaryFile
 
     # Restic Info
-    ## Process
-    $sCommonResticArguments    = "-r `"$($htSettings['RepositoryPath'])`" --password-file `"$sPasswordFile`""
+    ### Command to get password
+    $sUnencodedCommand = "Write-Host $($oCredentials.GetNetworkCredential().Password)"
+    $sBytesCommand     = [System.Text.Encoding]::Unicode.GetBytes($sUnencodedCommand)
+    $sEncodedCommand   = [Convert]::ToBase64String($sBytesCommand)
+    Clear-Variable sUnencodedCommand, sBytesCommand             # Clearing useless variable with clear password
+
+    ### Common restic to use
+    $sCommonResticArguments    = "-r `"$($htSettings['RepositoryPath'])`" --password-command `"powershell.exe -EncodedCommand $($sEncodedCommand)`""
     $sFilter                   = "--tag `"$sGame`""
     If ($TagFilter -ne "") {
         $sFilter += ",`"$($TagFilter)`""
@@ -589,6 +108,9 @@ BEGIN {
         $sLogName             = "DEBUG-$($sLogName)"
     }
     $sLogFile                 = "$($sLogPath)\$($sLogName)"
+
+    # Init Var
+    $oDataBefore = $null
     
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -599,10 +121,9 @@ BEGIN {
         $sSecurePassword = Get-Content $htSettings['ResticPasswordFile'] | ConvertTo-SecureString
     }
     $oCredentials = New-Object System.Management.Automation.PSCredential('restic', $sSecurePassword)
-    $oCredentials.GetNetworkCredential().Password | Out-File $sPasswordFile
 
     # Info
-    $oDataBefore               = ConvertTo-ResticStatsCustomObject
+    $oDataBefore               = Get-ResticStats
 
     $aSnapshotRemoved         = @()
     $aSnapshotStillPresent    = @()
@@ -727,7 +248,7 @@ END {
     
     If (!$NoStats -and !$NoDelete) {
         # Stats
-        $oDataAfter = ConvertTo-ResticStatsCustomObject
+        $oDataAfter = Get-ResticStats
 
         ShowLogMessage "INFO" "Stats:" ([ref]$sLogFile)
         ShowLogMessage "OTHER" "`tSnapshot numbers:   $($oDataBefore.SnapshotNumber) / $($oDataAfter.SnapshotNumber)" ([ref]$sLogFile)
@@ -755,7 +276,6 @@ END {
     Write-CenterText "*********************************" $sLogFile
 
     # Cleaning
-    Remove-Item $sPasswordFile
     Remove-Item $ResticSnapshotsList
     Remove-Item $ResticSnapshotsListError
     Remove-Item $ResticResultForget
@@ -764,4 +284,7 @@ END {
     Remove-Item $ResticResultPruneError
     Remove-Item $ResticResultStatsBefore
     Remove-Item $ResticResultStats
+
+    #Remove-Module Tjvs.Message, Tjvs.Process, Tjvs.Restic
+    Remove-Module Tjvs.*
 }
