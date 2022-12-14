@@ -10,14 +10,12 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 1.0.0.beta.3
+        Version        : 1.2.1
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 13/12/2022
-        Change         : Use --password-command instead of --password-file
-                         Get snapshots count for the game choice
-                         Use module for common functions
+        Date modified  : 14/12/2022
+        Change         : Version unification
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
