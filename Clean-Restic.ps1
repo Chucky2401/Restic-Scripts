@@ -65,17 +65,17 @@ BEGIN {
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
 
-    Import-Module -Name ".\inc\func\Tjvs.Message"
-    Import-Module -Name ".\inc\func\Tjvs.Process"
-    Import-Module -Name ".\inc\func\Tjvs.Restic"
-    Import-Module -Name ".\inc\func\Tjvs.Settings"
+    Import-Module -Name ".\inc\modules\Tjvs.Message"
+    Import-Module -Name ".\inc\modules\Tjvs.Process"
+    Import-Module -Name ".\inc\modules\Tjvs.Restic"
+    Import-Module -Name ".\inc\modules\Tjvs.Settings"
 
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
     # User settings
-    $htSettings = Get-Settings "$($PSScriptRoot)\conf\settings.ini"
+    #$htSettings = Get-Settings "$($PSScriptRoot)\conf\settings.ini"
 
     # Working Files
     $ResticSnapshotsList       = New-TemporaryFile
@@ -88,14 +88,10 @@ BEGIN {
     $ResticResultStats         = New-TemporaryFile
 
     # Restic Info
-    ### Command to get password
-    $sUnencodedCommand = "Write-Host $($oCredentials.GetNetworkCredential().Password)"
-    $sBytesCommand     = [System.Text.Encoding]::Unicode.GetBytes($sUnencodedCommand)
-    $sEncodedCommand   = [Convert]::ToBase64String($sBytesCommand)
-    Clear-Variable sUnencodedCommand, sBytesCommand             # Clearing useless variable with clear password
+    ## Envrinoment variable
+    Set-Environment
 
-    ### Common restic to use
-    $sCommonResticArguments    = "-r `"$($htSettings['RepositoryPath'])`" --password-command `"powershell.exe -EncodedCommand $($sEncodedCommand)`""
+    ## Common restic to use
     $sFilter                   = "--tag `"$sGame`""
     If ($TagFilter -ne "") {
         $sFilter += ",`"$($TagFilter)`""
@@ -114,17 +110,6 @@ BEGIN {
     
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
-    # Retrieve Password
-    If ($htSettings['ResticPassordFile'] -eq "manual" -or $htSettings['ResticPassordFile'] -eq "" -or !(Test-Path $htSettings['ResticPasswordFile'])) {
-        $sSecurePassword = Read-Host -Prompt "Please enter your Restic password" -AsSecureString
-    } Else {
-        $sSecurePassword = Get-Content $htSettings['ResticPasswordFile'] | ConvertTo-SecureString
-    }
-    $oCredentials = New-Object System.Management.Automation.PSCredential('restic', $sSecurePassword)
-
-    # Info
-    $oDataBefore               = Get-ResticStats
-
     $aSnapshotRemoved         = @()
     $aSnapshotStillPresent    = @()
 
@@ -141,9 +126,12 @@ BEGIN {
 
 PROCESS {
 
+    # Info
+    $oDataBefore = Get-ResticStats
+
     foreach ($sGame in $Game) {
         ShowLogMessage "INFO" "Get snapshots list for $($sGame) from Restic in JSON..." ([ref]$sLogFile)
-        $oResticProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) snapshots $($sFilter) --json" -RedirectStandardOutput $ResticSnapshotsList -RedirectStandardError $ResticSnapshotsListError -WindowStyle Hidden -Wait -PassThru
+        $oResticProcess = Start-Process -FilePath restic -ArgumentList "snapshots $($sFilter) --json" -RedirectStandardOutput $ResticSnapshotsList -RedirectStandardError $ResticSnapshotsListError -WindowStyle Hidden -Wait -PassThru
         
         If ($oResticProcess.ExitCode -eq 0) {
             ShowLogMessage "SUCCESS" "We got them!" ([ref]$sLogFile)
@@ -167,7 +155,7 @@ PROCESS {
         $jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
             $sSnapshotId = $PSItem.short_id
             If (!$NoDelete) {
-                $oResticProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) forget --tag `"$sGame`" $sSnapshotId" -RedirectStandardOutput $ResticResultForget -RedirectStandardError $ResticResultForgetError -WindowStyle Hidden -Wait -PassThru
+                $oResticProcess = Start-Process -FilePath restic -ArgumentList "forget --tag `"$sGame`" $sSnapshotId" -RedirectStandardOutput $ResticResultForget -RedirectStandardError $ResticResultForgetError -WindowStyle Hidden -Wait -PassThru
             
                 If ($oResticProcess.ExitCode -eq 0) {
                     $aResultDelete     = Get-Content $ResticResultForget | Where-Object { $PSItem -ne "" }
@@ -211,7 +199,7 @@ END {
         ShowLogMessage "OTHER" "" ([ref]$sLogFile)
     
         ShowLogMessage "INFO" "Cleaning (prune) repository..." ([ref]$sLogFile)
-        $oResticProcess = Start-Process -FilePath restic -ArgumentList "$($sCommonResticArguments) prune -n" -RedirectStandardOutput $ResticResultPrune -RedirectStandardError $ResticResultPruneError -WindowStyle Hidden -Wait -PassThru
+        $oResticProcess = Start-Process -FilePath restic -ArgumentList "prune -n" -RedirectStandardOutput $ResticResultPrune -RedirectStandardError $ResticResultPruneError -WindowStyle Hidden -Wait -PassThru
         
         If ($oResticProcess.ExitCode -eq 0) {
             #Success
@@ -284,7 +272,6 @@ END {
     Remove-Item $ResticResultPruneError
     Remove-Item $ResticResultStatsBefore
     Remove-Item $ResticResultStats
-
-    #Remove-Module Tjvs.Message, Tjvs.Process, Tjvs.Restic
+    Remove-Environement
     Remove-Module Tjvs.*
 }
