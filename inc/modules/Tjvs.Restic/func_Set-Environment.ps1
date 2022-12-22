@@ -49,7 +49,7 @@ function Set-Environment {
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
     
     # Settings
-    $htSettings = Get-Settings "$($global:PSScriptRoot)\conf\settings.ini"
+    $htSettings = Get-Settings ".\conf\settings.ini"
 
     # Password
     If ($htSettings['ResticPassordFile'] -eq "manual" -or $htSettings['ResticPassordFile'] -eq "" -or !(Test-Path $htSettings['ResticPasswordFile'])) {
