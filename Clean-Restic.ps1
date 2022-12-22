@@ -74,44 +74,31 @@ BEGIN {
 
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-    # User settings
-    #$htSettings = Get-Settings "$($PSScriptRoot)\conf\settings.ini"
-
-    # Working Files
-    $ResticSnapshotsList       = New-TemporaryFile
-    $ResticSnapshotsListError  = New-TemporaryFile
-    $ResticResultForget        = New-TemporaryFile
-    $ResticResultForgetError   = New-TemporaryFile
-    $ResticResultPrune         = New-TemporaryFile
-    $ResticResultPruneError    = New-TemporaryFile
-    $ResticResultStatsBefore   = New-TemporaryFile
-    $ResticResultStats         = New-TemporaryFile
-
     # Restic Info
     ## Envrinoment variable
     Set-Environment
 
     ## Common restic to use
-    $sFilter                   = "--tag `"$sGame`""
+    $sFilter = "--tag `"$sGame`""
     If ($TagFilter -ne "") {
         $sFilter += ",`"$($TagFilter)`""
     }
     
     # Logs
-    $sLogPath                 = "$($PSScriptRoot)\logs"
-    $sLogName                 = "Restic-Clean_old_backup-$(Get-Date -Format 'yyyy.MM.dd')-$(Get-Date -Format 'HH.mm').log"
+    $sLogPath = "$($PSScriptRoot)\logs"
+    $sLogName = "Restic-Clean_old_backup-$(Get-Date -Format 'yyyy.MM.dd')-$(Get-Date -Format 'HH.mm').log"
     If ($PSBoundParameters['Debug']) {
-        $sLogName             = "DEBUG-$($sLogName)"
+        $sLogName = "DEBUG-$($sLogName)"
     }
-    $sLogFile                 = "$($sLogPath)\$($sLogName)"
+    $sLogFile = "$($sLogPath)\$($sLogName)"
 
     # Init Var
     $oDataBefore = $null
     
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
-    $aSnapshotRemoved         = @()
-    $aSnapshotStillPresent    = @()
+    $aSnapshotRemoved      = @()
+    $aSnapshotStillPresent = @()
 
     Write-CenterText "*********************************" $sLogFile
     Write-CenterText "*                               *" $sLogFile
@@ -131,16 +118,16 @@ PROCESS {
 
     foreach ($sGame in $Game) {
         ShowLogMessage "INFO" "Get snapshots list for $($sGame) from Restic in JSON..." ([ref]$sLogFile)
-        $oResticProcess = Start-Process -FilePath restic -ArgumentList "snapshots $($sFilter) --json" -RedirectStandardOutput $ResticSnapshotsList -RedirectStandardError $ResticSnapshotsListError -WindowStyle Hidden -Wait -PassThru
+        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($sFilter) --json"
         
         If ($oResticProcess.ExitCode -eq 0) {
             ShowLogMessage "SUCCESS" "We got them!" ([ref]$sLogFile)
-            $jsResultRestic = Get-Content $ResticSnapshotsList | ConvertFrom-Json
+            $jsResultRestic = $oResticProcess.stdout | ConvertFrom-Json
         } Else {
             ShowLogMessage "ERROR" "Not able to get them! (Exit code: $($oResticProcess.ExitCode)" ([ref]$sLogFile)
             If ($PSBoundParameters['Debug']) {
                 ShowLogMessage "DEBUG" "Error detail:" ([ref]$sLogFile)
-                Get-Content $ResticSnapshotsListError | Where-Object { $PSItem -ne "" } | ForEach-Object {
+                $oResticProcess.stderr | Where-Object { $PSItem -ne "" } | ForEach-Object {
                     ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
                 }
             }
@@ -155,15 +142,15 @@ PROCESS {
         $jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
             $sSnapshotId = $PSItem.short_id
             If (!$NoDelete) {
-                $oResticProcess = Start-Process -FilePath restic -ArgumentList "forget --tag `"$sGame`" $sSnapshotId" -RedirectStandardOutput $ResticResultForget -RedirectStandardError $ResticResultForgetError -WindowStyle Hidden -Wait -PassThru
+                $oResticProcess = Start-Command -Title "Restic - Forget $($sSnapshotId)" -FilePath restic -ArgumentList "forget --tag `"$sGame`" $sSnapshotId"
             
                 If ($oResticProcess.ExitCode -eq 0) {
-                    $aResultDelete     = Get-Content $ResticResultForget | Where-Object { $PSItem -ne "" }
+                    $aResultDelete     = $oResticProcess.stdout.Split("`n") | Where-Object { $PSItem -ne "" }
                     $aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
     
                     ShowLogMessage "SUCCESS" "Snapshot $($sSnapshotId) removed successfully!" ([ref]$sLogFile)
                 } Else {
-                    $aResultDelete          = Get-Content $ResticResultForgetError | Where-Object { $PSItem -ne "" }
+                    $aResultDelete          = $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" }
                     $aSnapshotStillPresent += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
     
                     ShowLogMessage "ERROR" "Snapshot $($sSnapshotId) has not been removed successfully! (Exit code: $($oResticProcess.ExitCode)" ([ref]$sLogFile)
@@ -196,25 +183,17 @@ PROCESS {
 
 END {
     If (!$NoDelete) {
-        ShowLogMessage "OTHER" "" ([ref]$sLogFile)
-    
         ShowLogMessage "INFO" "Cleaning (prune) repository..." ([ref]$sLogFile)
-        $oResticProcess = Start-Process -FilePath restic -ArgumentList "prune -n" -RedirectStandardOutput $ResticResultPrune -RedirectStandardError $ResticResultPruneError -WindowStyle Hidden -Wait -PassThru
+        $oResticProcess = Start-Command -Title "Restic - Prune" -FilePath restic -ArgumentList "prune -n"
         
         If ($oResticProcess.ExitCode -eq 0) {
             #Success
             ShowLogMessage "SUCCESS" "Restic repository has been cleaned!" ([ref]$sLogFile)
 
             If ($PSBoundParameters['Debug'] -or $PSBoundParameters['Verbose']) {
-                #to repack:            37 blobs / 112.651 KiB
-                #this removes:         26 blobs / 19.824 KiB
-                #to delete:             0 blobs / 476.717 MiB
-                #total prune:          26 blobs / 476.736 MiB
-                #remaining:         41748 blobs / 12.233 GiB
-                #unused size after prune: 1.014 MiB (0.01% of remaining size)
                 ShowLogMessage "OTHER" "" ([ref]$sLogFile)
                 ShowLogMessage "DEBUG" "Prune detail:" ([ref]$sLogFile)
-                Get-Content $ResticResultPrune | Select-Object -Skip 10 -First 6 | ForEach-Object {
+                $oResticProcess.stdout.Split("`n") | Select-Object -Skip 10 -First 6 | ForEach-Object {
                     ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
                 }
             }
@@ -225,7 +204,7 @@ END {
             If ($PSBoundParameters['Debug']) {
                 ShowLogMessage "OTHER" "" ([ref]$sLogFile)
                 ShowLogMessage "DEBUG" "Error Output:" ([ref]$sLogFile)
-                Get-Content $ResticResultPruneError | Where-Object { $PSItem -ne "" } | ForEach-Object {
+                $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" } | ForEach-Object {
                     ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
                 }
             }
@@ -264,14 +243,6 @@ END {
     Write-CenterText "*********************************" $sLogFile
 
     # Cleaning
-    Remove-Item $ResticSnapshotsList
-    Remove-Item $ResticSnapshotsListError
-    Remove-Item $ResticResultForget
-    Remove-Item $ResticResultForgetError
-    Remove-Item $ResticResultPrune
-    Remove-Item $ResticResultPruneError
-    Remove-Item $ResticResultStatsBefore
-    Remove-Item $ResticResultStats
     Remove-Environement
     Remove-Module Tjvs.*
 }
