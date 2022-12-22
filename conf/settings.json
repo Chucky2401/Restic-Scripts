@@ -1,0 +1,18 @@
+{
+    "Global": {
+        "__Stats": "Disable totally stats even if the parameter '-NoStats' is not used!",
+        "Stats": false
+    },
+    "Restic": {
+        "__ManualPassword": "Set to true if you want to write your password",
+        "ManualPassword": false,
+        "__ResticPasswordFile": "File where your Restic password as a secure string is stored",
+        "ResticPasswordFile": "D:/Restic.txt",
+        "__RepositoryPath": "Your Restic repository path",
+        "RepositoryPath": "D:/Utilisateurs/TheBlackWizard/Jeux/Backup/Playnite/Archives"
+    },
+    "Snapshots": {
+        "__ToKeep": "Default value for number of snapshots to keep",
+        "ToKeep": 5
+    }
+}
