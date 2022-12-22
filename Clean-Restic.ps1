@@ -48,7 +48,7 @@ Param (
     [string]$TagFilter = "",
     [Parameter(Mandatory = $false)]
     [Alias("stk")]
-    [int]$SnapshotToKeep = 5,
+    [int]$SnapshotToKeep,
     [Parameter(Mandatory = $false)]
     [Alias("nd")]
     [Switch]$NoDelete,
@@ -73,6 +73,20 @@ BEGIN {
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
+
+    # Settings
+    If (-not (Test-Path ".\conf\settings.json")) {
+        Write-Warning "No settings file!"
+        Write-Host "Please answer the question below!`r`n"
+        
+        New-Settings
+    }
+    $oSettings = Get-Content ".\conf\settings.json" | ConvertFrom-Json
+
+    ## Default settings
+    If ($SnapshotToKeep -eq 0) {
+        $SnapshotToKeep = $oSettings.Snapshots.ToKeep
+    }
 
     # Restic Info
     ## Envrinoment variable
@@ -108,6 +122,12 @@ BEGIN {
     Write-CenterText "*                               *" $sLogFile
     Write-CenterText "*********************************" $sLogFile
     ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+
+    If (-not $oSettings.Global.Stats) {
+        Write-Warning "Stats are globally disabled!"
+        ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+        $NoStats = $True
+    }
 
 }
 
