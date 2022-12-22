@@ -472,6 +472,7 @@ If (-not (Test-Path ".\conf\settings.json")) {
     New-Settings
 }
 $oSettings = Get-Content ".\conf\settings.json" | ConvertFrom-Json
+$oSettings | Out-Null
 
 # Restic Info
 ## Envrinoment variable
