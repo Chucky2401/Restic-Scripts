@@ -24,11 +24,11 @@ function Get-ResticStats {
     )
 
     ## File
-    $oStats = Start-Command -Title "Restic Stats" -FilePath restic -ArgumentList "$($sCommonResticArguments) stats $($SnapshotId)"
+    $oStats = Start-Command -Title "Restic Stats" -FilePath restic -ArgumentList "stats $($SnapshotId)"
     $sRepoDataSize  = $oStats.stdout.Split("`n") | Select-Object -Skip 2
 
     ## Blob
-    $oRawStats = Start-Command -Title "Restic Raw Stats" -FilePath restic -ArgumentList "$($sCommonResticArguments) stats $($SnapshotId) --mode raw-data"
+    $oRawStats = Start-Command -Title "Restic Raw Stats" -FilePath restic -ArgumentList "stats $($SnapshotId) --mode raw-data"
     $sRepoBlobSize  = $oRawStats.stdout.Split("`n") | Select-Object -Skip 2
 
     # Scripts block
