@@ -35,10 +35,10 @@ $ErrorActionPreference      = "Stop"
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
 
-Import-Module -Name ".\inc\func\Tjvs.Message"
-Import-Module -Name ".\inc\func\Tjvs.Process"
-Import-Module -Name ".\inc\func\Tjvs.Restic"
-Import-Module -Name ".\inc\func\Tjvs.Settings"
+Import-Module -Name ".\inc\modules\Tjvs.Message"
+Import-Module -Name ".\inc\modules\Tjvs.Process"
+Import-Module -Name ".\inc\modules\Tjvs.Restic"
+Import-Module -Name ".\inc\modules\Tjvs.Settings"
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -464,18 +464,11 @@ function Get-SnapshotDetails {
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-$htSettings = Get-Settings "$($PSScriptRoot)\conf\settings.ini"
+#$htSettings = Get-Settings "$($PSScriptRoot)\conf\settings.ini"
 
 # Restic Info
-## Process
-### Command to get password
-$sUnencodedCommand = "Write-Host $($oCredentials.GetNetworkCredential().Password)"
-$sBytesCommand     = [System.Text.Encoding]::Unicode.GetBytes($sUnencodedCommand)
-$sEncodedCommand   = [Convert]::ToBase64String($sBytesCommand)
-Clear-Variable sUnencodedCommand, sBytesCommand             # Clearing useless variable with clear password
-
-### Common restic to use
-$sCommonResticArguments    = "-r `"$($htSettings['RepositoryPath'])`" --password-command `"powershell.exe -EncodedCommand $($sEncodedCommand)`""
+## Envrinoment variable
+Set-Environment
 
 # Info
 ## Hashtable
@@ -501,17 +494,6 @@ Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLog
 Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
 Write-CenterText "*                               *" $sLogFile
 Write-CenterText "*********************************" $sLogFile
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
-
-# Retrieve Password
-ShowLogMessage "INFO" "Retrieve Restic password..." ([ref]$sLogFile)
-If ($htSettings['ResticPassordFile'] -eq "manual" -or $htSettings['ResticPassordFile'] -eq "" -or !(Test-Path $htSettings['ResticPasswordFile'])) {
-    $sSecurePassword = Read-Host -Prompt "Please enter your Restic password" -AsSecureString
-} Else {
-    $sSecurePassword = Get-Content $htSettings['ResticPasswordFile'] | ConvertTo-SecureString
-}
-$oCredentials = New-Object System.Management.Automation.PSCredential('restic', $sSecurePassword)
-
 ShowLogMessage "OTHER" "" ([ref]$sLogFile)
 
 # List games
@@ -579,3 +561,6 @@ ShowLogMessage "OTHER" "Snapshot for $($sChooseGame)" ([ref]$sLogFile)
 #Write-CenterText "*********************************" $sLogFile
 
 $aSnapshotListDetails
+
+Remove-Environment
+Remove-Module Tjvs.*
