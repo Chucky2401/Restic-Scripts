@@ -223,7 +223,7 @@ END {
 
             If ($PSBoundParameters['Debug']) {
                 ShowLogMessage "OTHER" "" ([ref]$sLogFile)
-                ShowLogMessage "DEBUG" "Error Output:" ([ref]$sLogFile)
+                ShowLogMessage "DEBUG" "Error detail:" ([ref]$sLogFile)
                 $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" } | ForEach-Object {
                     ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
                 }
