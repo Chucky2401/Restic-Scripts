@@ -49,17 +49,18 @@ function Set-Environment {
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
     
     # Settings
-    $htSettings = Get-Settings ".\conf\settings.ini"
+    #$htSettings = Get-Settings ".\conf\settings.ini"
 
     # Password
-    If ($htSettings['ResticPassordFile'] -eq "manual" -or $htSettings['ResticPassordFile'] -eq "" -or !(Test-Path $htSettings['ResticPasswordFile'])) {
+    #If ($htSettings['ResticPassordFile'] -eq "manual" -or $htSettings['ResticPassordFile'] -eq "" -or !(Test-Path $htSettings['ResticPasswordFile'])) {
+    If ($oSettings.Restic.ManualPassword -or $oSettings.Restic.ResticPasswordFile -eq "" -or !(Test-Path $oSettings.Restic.ResticPasswordFile)) {
         $sSecurePassword = Read-Host -Prompt "Please enter your Restic password" -AsSecureString
     } Else {
-        $sSecurePassword = Get-Content $htSettings['ResticPasswordFile'] | ConvertTo-SecureString
+        $sSecurePassword = Get-Content $oSettings.Restic.ResticPasswordFile | ConvertTo-SecureString
     }
     $oCredentials = New-Object System.Management.Automation.PSCredential('restic', $sSecurePassword)
 
     # Env
     $env:RESTIC_PASSWORD   = $oCredentials.GetNetworkCredential().Password
-    $env:RESTIC_REPOSITORY = $htSettings['RepositoryPath']
+    $env:RESTIC_REPOSITORY = $oSettings.Restic.RepositoryPath
 }

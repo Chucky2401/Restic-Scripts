@@ -464,7 +464,15 @@ function Get-SnapshotDetails {
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-#$htSettings = Get-Settings "$($PSScriptRoot)\conf\settings.ini"
+# Settings
+If (-not (Test-Path ".\conf\settings.json")) {
+    Write-Warning "No settings file!"
+    Write-Host "Please answer the question below!`r`n"
+    
+    New-Settings
+}
+$oSettings = Get-Content ".\conf\settings.json" | ConvertFrom-Json
+$oSettings | Out-Null
 
 # Restic Info
 ## Envrinoment variable
@@ -536,7 +544,7 @@ $oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
 
 $oSnapshotsList | ForEach-Object {
     $iPercentComplete = [Math]::Round(($cntDetails/$oSnapshotsList.Length)*100,2)
-    Write-Progress -Activity "Retrieve snapshot details for $($sChooseGame) | $($cntDetails+1)/$($oSnapshotsList.Length) ($($iPercentComplete)%)..." -PercentComplete $iPercentComplete -Status "Retrieve detail for $($PSItem.ShortId)..."
+    Write-Progress -Activity "Retrieve snapshot details for $($sChooseGame) | $($cntDetails)/$($oSnapshotsList.Length) ($($iPercentComplete)%)..." -PercentComplete $iPercentComplete -Status "Retrieve detail for $($PSItem.ShortId)..."
 
     $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem
     $aSnapshotListDetails += $oSnapshotDetailStats
