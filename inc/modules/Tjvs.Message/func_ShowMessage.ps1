@@ -36,8 +36,16 @@ function ShowMessage {
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [Alias("m")]
-        [string]$message
+        [string]$message,
+        [Parameter(Mandatory = $False)]
+        [AllowEmptyString()]
+        [Alias("v")]
+        [string[]]$variable
     )
+
+    If ($variable.count -ge 1) {
+        $message = $message -f $variable
+    }
 
     $sDate = Get-Date -UFormat "%d.%m.%Y - %H:%M:%S"
 
