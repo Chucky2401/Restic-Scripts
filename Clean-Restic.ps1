@@ -61,10 +61,10 @@ BEGIN {
     #---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
     #Set Error Action to Silently Continue
-    $ErrorActionPreference = "SilentlyContinue"
+    $ErrorActionPreference = "Stop"
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
-    Import-LocalizedData -BindingVariable "MessageDefaultSet" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
+    Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
 
     Import-Module -Name ".\inc\modules\Tjvs.Message"
     Import-Module -Name ".\inc\modules\Tjvs.Process"
@@ -77,8 +77,8 @@ BEGIN {
 
     # Settings
     If (-not (Test-Path ".\conf\settings.json")) {
-        Write-Warning "No settings file!"
-        Write-Host "Please answer the question below!`r`n"
+        Write-Warning $Message.NoSetFile
+        Write-Host $Message.PleaseAnswer
         
         New-Settings
     }
@@ -123,11 +123,11 @@ BEGIN {
     Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
     Write-CenterText "*                               *" $sLogFile
     Write-CenterText "*********************************" $sLogFile
-    ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+    ShowLogMessage "OTHER" "" -sLogFile ([ref]$sLogFile)
 
     If (-not $oSettings.Global.Stats) {
-        Write-Warning "Stats are globally disabled!"
-        ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+        Write-Warning $Message.Warn_StatsDisable
+        ShowLogMessage "OTHER" "" -sLogFile ([ref]$sLogFile)
         $NoStats = $True
     }
 
@@ -139,18 +139,18 @@ PROCESS {
     $oDataBefore = Get-ResticStats
 
     foreach ($sGame in $Game) {
-        ShowLogMessage "INFO" "Get snapshots list for $($sGame) from Restic in JSON..." ([ref]$sLogFile)
+        ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sGame) -sLogFile ([ref]$sLogFile)
         $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($sFilter) --json"
         
         If ($oResticProcess.ExitCode -eq 0) {
-            ShowLogMessage "SUCCESS" "We got them!" ([ref]$sLogFile)
+            ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetSnaps -sLogFile ([ref]$sLogFile)
             $jsResultRestic = $oResticProcess.stdout | ConvertFrom-Json
         } Else {
-            ShowLogMessage "ERROR" "Not able to get them! (Exit code: $($oResticProcess.ExitCode)" ([ref]$sLogFile)
+            ShowLogMessage -type "ERROR" -message $Message.Err_GetSnaps -variable $($oResticProcess.ExitCode) -sLogFile ([ref]$sLogFile)
             If ($PSBoundParameters['Debug']) {
-                ShowLogMessage "DEBUG" "Error detail:" ([ref]$sLogFile)
+                ShowLogMessage -type "DEBUG" -message $Message.Dbg_ErrDetail -sLogFile ([ref]$sLogFile)
                 $oResticProcess.stderr | Where-Object { $PSItem -ne "" } | ForEach-Object {
-                    ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
+                    ShowLogMessage -type "OTHER" -message "`t$($PSItem)" -sLogFile ([ref]$sLogFile)
                 }
             }
         
@@ -158,9 +158,9 @@ PROCESS {
             exit 1
         }
         
-        ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
         
-        ShowLogMessage "INFO" "Delete older $($sGame) snapshots and keep only the $($SnapshotToKeep) latest..." ([ref]$sLogFile)
+        ShowLogMessage -type "INFO" -message $Message.Inf_DelSnaps -variable $($sGame),$($SnapshotToKeep) -sLogFile ([ref]$sLogFile)
         $jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
             $sSnapshotId = $PSItem.short_id
             If (!$NoDelete) {
@@ -170,90 +170,90 @@ PROCESS {
                     $aResultDelete     = $oResticProcess.stdout.Split("`n") | Where-Object { $PSItem -ne "" }
                     $aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
     
-                    ShowLogMessage "SUCCESS" "Snapshot $($sSnapshotId) removed successfully!" ([ref]$sLogFile)
+                    ShowLogMessage -type "SUCCESS" -message $Message.Suc_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
                 } Else {
                     $aResultDelete          = $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" }
                     $aSnapshotStillPresent += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
     
-                    ShowLogMessage "ERROR" "Snapshot $($sSnapshotId) has not been removed successfully! (Exit code: $($oResticProcess.ExitCode)" ([ref]$sLogFile)
+                    ShowLogMessage -type "ERROR" -message $Message.Err_DelSnaps -variable $($sSnapshotId),$($oResticProcess.ExitCode) -sLogFile ([ref]$sLogFile)
     
                     If ($PSBoundParameters['Debug']) {
-                        ShowLogMessage "DEBUG" "Error detail:" ([ref]$sLogFile)
-                        ShowLogMessage "OTHER" "`t$(($aSnapshotStillPresent | Select-Object -Last 1).Detail)" ([ref]$sLogFile)
+                        ShowLogMessage -type "DEBUG" -message $Message.Dbg_ErrDetail -sLogFile ([ref]$sLogFile)
+                        ShowLogMessage -type "OTHER" -message "`t$(($aSnapshotStillPresent | Select-Object -Last 1).Detail)" -sLogFile ([ref]$sLogFile)
                     }
                 }
             } Else {
-                ShowLogMessage "DEBUG" "Snapshot $($sSnapshotId) would be removed" ([ref]$sLogFile)
+                ShowLogMessage -type "DEBUG" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
                 $aSnapshotRemoved += $sSnapshotId
             }
         }
     
         If (!$NoDelete) {
             If ($aSnapshotStillPresent.Count -ge 1) {
-                ShowLogMessage "WARNING" "$($aSnapshotRemoved.Count) snapshots has been removed, but $($aSnapshotStillPresent.Count) are still present" ([ref]$sLogFile)
+                ShowLogMessage -type "WARNING" -message $Message.Warn_SumDel -variable $($aSnapshotRemoved.Count),$($aSnapshotStillPresent.Count) -sLogFile ([ref]$sLogFile)
             } Else {
-                ShowLogMessage "SUCCESS" "All the $($aSnapshotRemoved.Count) has been removed successfully!" ([ref]$sLogFile)
+                ShowLogMessage -type "SUCCESS" -message $Message.Suc_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
             }
         } Else {
-            ShowLogMessage "DEBUG" "$($aSnapshotRemoved.Count) snapshots would be removed" ([ref]$sLogFile)
+            ShowLogMessage -type "DEBUG" -message $Message.Dbg_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
         }
     
-        ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
     }
 
 }
 
 END {
     If (!$NoDelete) {
-        ShowLogMessage "INFO" "Cleaning (prune) repository..." ([ref]$sLogFile)
+        ShowLogMessage -type "INFO" -message $Message.Inf_Prune -sLogFile ([ref]$sLogFile)
         $oResticProcess = Start-Command -Title "Restic - Prune" -FilePath restic -ArgumentList "prune -n"
         
         If ($oResticProcess.ExitCode -eq 0) {
             #Success
-            ShowLogMessage "SUCCESS" "Restic repository has been cleaned!" ([ref]$sLogFile)
+            ShowLogMessage -type "SUCCESS" -message $Message.Suc_Prune -sLogFile ([ref]$sLogFile)
 
             If ($PSBoundParameters['Debug'] -or $PSBoundParameters['Verbose']) {
-                ShowLogMessage "OTHER" "" ([ref]$sLogFile)
-                ShowLogMessage "DEBUG" "Prune detail:" ([ref]$sLogFile)
+                ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
+                ShowLogMessage -type "DEBUG" -message $Message.Dbg_PruneDetail -sLogFile ([ref]$sLogFile)
                 $oResticProcess.stdout.Split("`n") | Select-Object -Skip 10 -First 6 | ForEach-Object {
-                    ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
+                    ShowLogMessage -type "OTHER" -message "`t$($PSItem)" -sLogFile ([ref]$sLogFile)
                 }
             }
         } Else {
             #Failed
-            ShowLogMessage "ERROR" "Restic repository has not been cleaned! (Exit code: $($oResticProcess.ExitCode)" ([ref]$sLogFile)
+            ShowLogMessage -type "ERROR" -message $Message.Err_Prune -variable $($oResticProcess.ExitCode) -sLogFile ([ref]$sLogFile)
 
             If ($PSBoundParameters['Debug']) {
-                ShowLogMessage "OTHER" "" ([ref]$sLogFile)
-                ShowLogMessage "DEBUG" "Error detail:" ([ref]$sLogFile)
+                ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
+                ShowLogMessage -type "DEBUG" -message $Message.Dbg_ErrDetail -sLogFile ([ref]$sLogFile)
                 $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" } | ForEach-Object {
-                    ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
+                    ShowLogMessage -type "OTHER" -message "`t$($PSItem)" -sLogFile ([ref]$sLogFile)
                 }
             }
         }
     }
 
-    ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+    ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
     
     If (!$NoStats -and !$NoDelete) {
         # Stats
         $oDataAfter = Get-ResticStats
 
-        ShowLogMessage "INFO" "Stats:" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tSnapshot numbers:   $($oDataBefore.SnapshotNumber) / $($oDataAfter.SnapshotNumber)" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tTotal files backup: $($oDataBefore.TotalFileBackup) / $($oDataAfter.TotalFileBackup)" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tTotal files size:   $($oDataBefore.FileSizeInString()) / $($oDataAfter.FileSizeInString())" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tTotal blobs:        $($oDataBefore.TotalBlob) / $($oDataAfter.TotalBlob)" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tTotal blobs size:   $($oDataBefore.BlobSizeInString()) / $($oDataAfter.BlobSizeInString())" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tRatio:              $($oDataBefore.Ratio) % / $($oDataAfter.Ratio) %" ([ref]$sLogFile)
+        ShowLogMessage -type "INFO" -message $Message.Inf_StatsBoth -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BothSnapNbr -variable $($oDataBefore.SnapshotNumber),$($oDataAfter.SnapshotNumber) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BothFileBck -variable $($oDataBefore.TotalFileBackup),$($oDataAfter.TotalFileBackup) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BothFileSize -variable $($oDataBefore.FileSizeInString()),$($oDataAfter.FileSizeInString()) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BothBlob -variable $($oDataBefore.TotalBlob),$($oDataAfter.TotalBlob) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BothBlobSize -variable $($oDataBefore.BlobSizeInString()),$($oDataAfter.BlobSizeInString()) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BothRatio -variable $($oDataBefore.Ratio),$($oDataAfter.Ratio) -sLogFile ([ref]$sLogFile)
     } ElseIf (!$NoStats -and $NoDelete) {
-        ShowLogMessage "INFO" "Current restic repository stats:" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tSnapshot numbers:   $($oDataBefore.SnapshotNumber)" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tTotal files backup: $($oDataBefore.TotalFileBackup)" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tTotal files size:   $($oDataBefore.FileSizeInString())" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tTotal blobs:        $($oDataBefore.TotalBlob)" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tTotal blobs size:   $($oDataBefore.BlobSizeInString())" ([ref]$sLogFile)
-        ShowLogMessage "OTHER" "`tRatio:              $($oDataBefore.Ratio) %" ([ref]$sLogFile)
+        ShowLogMessage -type "INFO" -message $Message.Inf_StatsBefore -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BfrSnapNbr -variable $($oDataBefore.SnapshotNumber) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BfrFileBck -variable $($oDataBefore.TotalFileBackup) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BfrFileSize -variable $($oDataBefore.FileSizeInString()) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BfrBlob -variable $($oDataBefore.TotalBlob) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BfrBlobSize -variable $($oDataBefore.BlobSizeInString()) -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message $Message.Oth_BfrRatio -variable $($oDataBefore.Ratio) -sLogFile ([ref]$sLogFile)
     }
 
     Write-CenterText "*********************************" $sLogFile
@@ -265,6 +265,6 @@ END {
     Write-CenterText "*********************************" $sLogFile
 
     # Cleaning
-    Remove-Environement
+    Remove-Environment
     Remove-Module Tjvs.*
 }
