@@ -49,13 +49,15 @@ function New-Settings {
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
     $oTemplate = $DefaultSettings
+
+    Import-LocalizedData -BindingVariable "MessageNewSet" -BaseDirectory "local" -FileName "New-Settings.psd1"
     
     $aProperties = @(
-        [PSCustomObject]@{ Property = "Global" ; SubProperty = "Stats" ; Question = "Do you want to totally disable stats even if the parameter '-NoStats' is not used?" },
-        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ManualPassword" ; Question = "Do you want to write your Restic password each time?" },
-        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ResticPasswordFile" ; Question = "Where do you want to store your password?" },
-        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "RepositoryPath" ; Question = "Choose your Restic local folder" },
-        [PSCustomObject]@{ Property = "Snapshots" ; SubProperty = "ToKeep" ; Question = "How many snapshots do you want to keep by default?" }
+        [PSCustomObject]@{ Property = "Global" ; SubProperty = "Stats" ; Question = $MessageNewSet.global__Stats },
+        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ManualPassword" ; Question = $MessageNewSet.Restic__ManualPassword },
+        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ResticPasswordFile" ; Question = $MessageNewSet.Restic__ResticPasswordFile },
+        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "RepositoryPath" ; Question = $MessageNewSet.Restic__RepositoryPath },
+        [PSCustomObject]@{ Property = "Snapshots" ; SubProperty = "ToKeep" ; Question = $MessageNewSet.Snapshot__ToKeep }
     )
 
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
@@ -107,7 +109,7 @@ function New-Settings {
                 $null = $oFileBrowser.ShowDialog()
                 $PasswordFile = $oFileBrowser.FileName
 
-                Read-Host -Prompt "What is your password?" -AsSecureString | ConvertFrom-SecureString | Out-File $PasswordFile
+                Read-Host -Prompt $MessageNewSet.question_password -AsSecureString | ConvertFrom-SecureString | Out-File $PasswordFile
                 $oTemplate.$sProperty.$sSubProperty = $PasswordFile
 
                 break;
@@ -132,7 +134,7 @@ function New-Settings {
                         $iSnapshotsToKeep = $sSnapshotsToKeep.ToInt32($null)
                         $bValidNumber = $True
                     } Catch {
-                        Write-Host "Invalid number!" -ForegroundColor Red
+                        Write-Host $MessageNewSet.invalid_nbr -ForegroundColor Red
                     }
                 }
                 $oTemplate.$sProperty.$sSubProperty = $iSnapshotsToKeep

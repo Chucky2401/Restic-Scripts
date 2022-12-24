@@ -1,18 +1,20 @@
+Import-LocalizedData -BindingVariable "MessageDefaultSet" -BaseDirectory "local" -FileName "SettingsProperties.psd1"
+
 $DefaultSettings = [PSCustomObject]@{
     Global    = [PSCustomObject]@{
-        __Stats = "Disable totally stats even if the parameter '-NoStats' is not used!"
+        __Stats = $MessageDefaultSet.global__Stats
         Stats   = $True
     }
     Restic    = [PSCustomObject]@{
-        __ManualPassword     = "Set to true if you want to write your password"
+        __ManualPassword     = $MessageDefaultSet.restic__ManualPassword
         ManualPassword       = $False
-        __ResticPasswordFile = "File where your Restic password as a secure string is stored"
+        __ResticPasswordFile = $MessageDefaultSet.restic_ResticPasswordFile
         ResticPasswordFile   = ""
-        __RepositoryPath     = "Your Restic repository path"
+        __RepositoryPath     = $MessageDefaultSet.repository__RepositoryPath
         RepositoryPath       = ""
     }
     Snapshots = [PSCustomObject]@{
-        __ToKeep = "Default value for number of snapshots to keep"
+        __ToKeep = $MessageDefaultSet.snapshots__ToKeep
         ToKeep   = 5
     }
 }
