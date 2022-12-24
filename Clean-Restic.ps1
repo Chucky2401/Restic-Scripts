@@ -81,7 +81,8 @@ BEGIN {
         
         New-Settings
     }
-    $oSettings = Get-Content ".\conf\settings.json" | ConvertFrom-Json
+    
+    $oSettings = Get-Settings -File ".\conf\settings.json"
 
     ## Default settings
     If ($SnapshotToKeep -eq 0) {
@@ -90,7 +91,7 @@ BEGIN {
 
     # Restic Info
     ## Envrinoment variable
-    Set-Environment
+    Set-Environment -Settings $oSettings
 
     ## Common restic to use
     $sFilter = "--tag `"$sGame`""
