@@ -471,12 +471,11 @@ If (-not (Test-Path ".\conf\settings.json")) {
     
     New-Settings
 }
-$oSettings = Get-Content ".\conf\settings.json" | ConvertFrom-Json
-$oSettings | Out-Null
+$oSettings = Get-Settings -File ".\conf\settings.json"
 
 # Restic Info
 ## Envrinoment variable
-Set-Environment
+Set-Environment -Settings $oSettings
 
 # Info
 ## Hashtable
