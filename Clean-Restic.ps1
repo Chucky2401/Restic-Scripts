@@ -64,6 +64,7 @@ BEGIN {
     $ErrorActionPreference = "SilentlyContinue"
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
+    Import-LocalizedData -BindingVariable "MessageDefaultSet" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
 
     Import-Module -Name ".\inc\modules\Tjvs.Message"
     Import-Module -Name ".\inc\modules\Tjvs.Process"
