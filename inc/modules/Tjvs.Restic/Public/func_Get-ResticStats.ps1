@@ -23,6 +23,8 @@ function Get-ResticStats {
         [String]$SnapshotId = $null
     )
 
+    #Import-Module -Name ".\inc\modules\Tjvs.Restic" -Function ConvertTo-HashtableSize
+
     ## File
     $oStats = Start-Command -Title "Restic Stats" -FilePath restic -ArgumentList "stats $($SnapshotId)"
     $sRepoDataSize  = $oStats.stdout.Split("`n") | Select-Object -Skip 2
