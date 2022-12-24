@@ -13,6 +13,9 @@
     Inf_DelSnaps = "Supprime les plus vieux snapshots pour {0} et garde seulement les {1} derniers..." # 0: Game / 1: Snapshots number to keep
     ### Prune
     Inf_Prune = "Nettoyage (prune) dépôt..."
+    ### Stats
+    Inf_StatsBoth   = "Statistiques :"
+    Inf_StatsBefore = "Statistiques actuelles du dépôt Restic :"
 
     ## Success
     ### Get
@@ -46,7 +49,7 @@
     ## Other
     ### Stats
     #### Before only
-    Oth_BfrSnapNbr  = "`tSNombre snapshots:          {0}"      # 0: Snapshots number before
+    Oth_BfrSnapNbr  = "`tNombre snapshots:           {0}"      # 0: Snapshots number before
     Oth_BfrFileBck  = "`tTotal fichiers sauvegardés: {0}"      # 0: Total files backup before
     Oth_BfrFileSize = "`tTotal taille fichiers:      {0}"      # 0: Total files size before
     Oth_BfrBlob     = "`tTotal blobs:                {0}"      # 0: Total blob before
