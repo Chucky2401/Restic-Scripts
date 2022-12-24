@@ -28,6 +28,7 @@ function Write-CenterText {
         [Parameter(Position=1,Mandatory=$false)]
         [string]$sLogFile = $null
     )
+    
     $nConsoleWidth    = (Get-Host).UI.RawUI.MaxWindowSize.Width
     $nStringLength    = $sString.Length
     $nPaddingSize     = "{0:N0}" -f (($nConsoleWidth - $nStringLength) / 2)
@@ -36,6 +37,6 @@ function Write-CenterText {
 
     Write-Host $sFinalString
     If ($null -ne $sLogFile) {
-        Write-Output $sFinalString >> $sLogFile
+        Write-Output $sFinalString | Out-File $sLogFile -Encoding utf8 -Append
     }
 }

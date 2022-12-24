@@ -35,18 +35,26 @@ function LogMessage {
     #>
     [cmdletbinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $True)]
         [Alias("t")]
         [ValidateSet("INFO", "WARNING", "ERROR", "SUCCESS", "DEBUG", "OTHER", IgnoreCase = $false)]
         [string]$type,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $True)]
         [AllowEmptyString()]
         [Alias("m")]
         [string]$message,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $False)]
+        [AllowEmptyString()]
+        [Alias("v")]
+        [string[]]$variable,
+        [Parameter(Mandatory = $True)]
         [Alias("l")]
         [ref]$sLogFile
     )
+
+    If ($variable.count -ge 1) {
+        $message = $message -f $variable
+    }
 
     $sDate = Get-Date -UFormat "%d.%m.%Y - %H:%M:%S"
 
@@ -81,7 +89,7 @@ function LogMessage {
         If ($sLogFile.Value.GetType().Name -ne "String") {
             $sLogFile.Value += $sSortie
         } Else {
-            Write-Output $sSortie >> $sLogFile.Value
+            Write-Output $sSortie | Out-File $sLogFile.Value -Append -Encoding utf8
         }
     }
 }
