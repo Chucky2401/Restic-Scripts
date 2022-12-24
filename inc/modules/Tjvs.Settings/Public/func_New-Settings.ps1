@@ -47,26 +47,9 @@ function New-Settings {
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
         
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
-    
-    $oDefault = [PSCustomObject]@{
-        Global    = [PSCustomObject]@{
-            __Stats = "Disable totally stats even if the parameter '-NoStats' is not used!"
-            Stats   = $True
-        }
-        Restic    = [PSCustomObject]@{
-            __ManualPassword     = "Set to true if you want to write your password"
-            ManualPassword       = $False
-            __ResticPasswordFile = "File where your Restic password as a secure string is stored"
-            ResticPasswordFile   = ""
-            __RepositoryPath     = "Your Restic repository path"
-            RepositoryPath       = ""
-        }
-        Snapshots = [PSCustomObject]@{
-            __ToKeep = "Default value for number of snapshots to keep"
-            ToKeep   = 5
-        }
-    }
 
+    $oTemplate = $DefaultSettings
+    
     $aProperties = @(
         [PSCustomObject]@{ Property = "Global" ; SubProperty = "Stats" ; Question = "Do you want to totally disable stats even if the parameter '-NoStats' is not used?" },
         [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ManualPassword" ; Question = "Do you want to write your Restic password each time?" },
@@ -91,8 +74,8 @@ function New-Settings {
                 $result = $host.ui.PromptForChoice("", $sQuestion, $aOptions, 0)
 
                 switch ($result) {
-                    0 { $oDefault.$sProperty.$sSubProperty = $False }
-                    1 { $oDefault.$sProperty.$sSubProperty = $True }
+                    0 { $oTemplate.$sProperty.$sSubProperty = $False }
+                    1 { $oTemplate.$sProperty.$sSubProperty = $True }
                 }
 
                 break;
@@ -105,14 +88,14 @@ function New-Settings {
                 $result = $host.ui.PromptForChoice("", $sQuestion, $aOptions, 0)
 
                 switch ($result) {
-                    0 { $oDefault.$sProperty.$sSubProperty = $True }
-                    1 { $oDefault.$sProperty.$sSubProperty = $False }
+                    0 { $oTemplate.$sProperty.$sSubProperty = $True }
+                    1 { $oTemplate.$sProperty.$sSubProperty = $False }
                 }
 
                 break;
             }
             "ResticPasswordFile" {
-                If ($oDefault.Restic.ManualPassword) {
+                If ($oTemplate.Restic.ManualPassword) {
                     break;
                 }
 
@@ -125,7 +108,7 @@ function New-Settings {
                 $PasswordFile = $oFileBrowser.FileName
 
                 Read-Host -Prompt "What is your password?" -AsSecureString | ConvertFrom-SecureString | Out-File $PasswordFile
-                $oDefault.$sProperty.$sSubProperty = $PasswordFile
+                $oTemplate.$sProperty.$sSubProperty = $PasswordFile
 
                 break;
             }
@@ -137,7 +120,7 @@ function New-Settings {
                 $null = $oFolderBrowser.ShowDialog()
                 $ResticPath = $oFolderBrowser.SelectedPath
 
-                $oDefault.$sProperty.$sSubProperty = $ResticPath
+                $oTemplate.$sProperty.$sSubProperty = $ResticPath
 
                 break;
             }
@@ -152,7 +135,7 @@ function New-Settings {
                         Write-Host "Invalid number!" -ForegroundColor Red
                     }
                 }
-                $oDefault.$sProperty.$sSubProperty = $iSnapshotsToKeep
+                $oTemplate.$sProperty.$sSubProperty = $iSnapshotsToKeep
                 
                 break;
             }
@@ -160,5 +143,5 @@ function New-Settings {
         ShowMessage "OTHER" ""
     }
 
-    $oDefault | ConvertTo-Json | Out-File conf\settings.json
+    $oTemplate | ConvertTo-Json | Out-File conf\settings.json
 }
