@@ -1,5 +1,5 @@
 @{
-    # English message
+    # English message for Clean-Restic.ps1
 
     ## Settings
     NoSetFile         = "No settings file!"
