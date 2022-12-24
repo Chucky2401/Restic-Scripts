@@ -26,7 +26,8 @@ function Set-Environment {
     
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
     Param (
-        #Script parameters go here
+        [Parameter(Position = 0, Mandatory = $True)]
+        [PSObject]$Settings
     )
     
     #---------------------------------------------------------[Initialisations]--------------------------------------------------------
