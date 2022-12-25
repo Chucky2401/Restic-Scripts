@@ -1,5 +1,5 @@
 @{
-    # English message
+    # English message for Clean-Restic.ps1
 
     ## Settings
     NoSetFile         = "No settings file!"
@@ -13,6 +13,9 @@
     Inf_DelSnaps = "Delete {0} older snapshots and keep only the {1} latest..." # 0: Game / 1: Snapshots number to keep
     ### Prune
     Inf_Prune = "Cleaning (prune) repository..."
+    ### Stats
+    Inf_StatsBoth   = "Stats:"
+    Inf_StatsBefore = "Current restic repository stats:"
 
     ## Success
     ### Get
