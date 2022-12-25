@@ -123,11 +123,11 @@ BEGIN {
     Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
     Write-CenterText "*                               *" $sLogFile
     Write-CenterText "*********************************" $sLogFile
-    ShowLogMessage "OTHER" "" -sLogFile ([ref]$sLogFile)
+    ShowLogMessage -type "OTHER" -message "" -sLogFile -sLogFile ([ref]$sLogFile)
 
     If (-not $oSettings.Global.Stats) {
         Write-Warning $Message.Warn_StatsDisable
-        ShowLogMessage "OTHER" "" -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message "" -sLogFile -sLogFile ([ref]$sLogFile)
         $NoStats = $True
     }
 
