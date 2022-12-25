@@ -40,6 +40,10 @@ Import-Module -Name ".\inc\modules\Tjvs.Process"
 Import-Module -Name ".\inc\modules\Tjvs.Restic"
 Import-Module -Name ".\inc\modules\Tjvs.Settings"
 
+#Set-PowerShellUICulture en-US
+
+Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Get-ResticGameSnapshots.psd1"
+
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
 #TODO: Help header
@@ -501,10 +505,10 @@ Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLog
 Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
 Write-CenterText "*                               *" $sLogFile
 Write-CenterText "*********************************" $sLogFile
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
 # List games
-ShowLogMessage "INFO" "Retrieve game in Restic repository..." ([ref]$sLogFile)
+ShowLogMessage -type "INFO" -message $Message.Inf_GetGames -sLogFile ([ref]$sLogFile)
 $oResticProcess = Start-Command -Title "Restic Snapshots" -FilePath restic -ArgumentList "$($sCommonResticArguments) --json snapshots"
 
 If ($oResticProcess.ExitCode -eq 0) {
@@ -518,13 +522,13 @@ If ($oResticProcess.ExitCode -eq 0) {
     # Hashtable of games and snapshots count per game
     $htGameSnapshotsCount = Get-SnapshotsCount -ResticOutObject $jsResultRestic
 
-    ShowLogMessage "SUCCESS" "Games have been retrieved!" ([ref]$sLogFile)
+    ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetGames -sLogFile ([ref]$sLogFile)
 } Else {
-    ShowLogMessage "ERROR" "Not able to get games list! (Exit code: $($oResticProcess.ExitCode)" ([ref]$sLogFile)
+    ShowLogMessage -type "ERROR" -message $Message.Err_GetGames -variable $($oResticProcess.ExitCode) -sLogFile ([ref]$sLogFile)
     If ($PSBoundParameters['Debug']) {
-        ShowLogMessage "DEBUG" "Error detail:" ([ref]$sLogFile)
+        ShowLogMessage -type "DEBUG" -message $Message.Dbg_ErrDetail -sLogFile ([ref]$sLogFile)
         $oResticProcess.stderr | Where-Object { $PSItem -ne "" } | ForEach-Object {
-            ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
+            ShowLogMessage -type "OTHER" -message "`t$($PSItem)" -sLogFile ([ref]$sLogFile)
         }
     }
 
@@ -532,29 +536,29 @@ If ($oResticProcess.ExitCode -eq 0) {
     exit 1
 }
 
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-$sChooseGame = $aListGames[(Read-GameChoice -Title "For which game do you want to see the saves?" -Message "Choose game" -Choices $aListGames)]
+$sChooseGame = $aListGames[(Read-GameChoice -Title $Message.Que_GameChoiceTitle -Message $Message.Que_GameChoiceMsg -Choices $aListGames)]
 
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-ShowLogMessage "INFO" "Retrieve snapshots for $($sChooseGame)..." ([ref]$sLogFile)
+ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sChooseGame) -sLogFile ([ref]$sLogFile)
 $oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
 
 $oSnapshotsList | ForEach-Object {
     $iPercentComplete = [Math]::Round(($cntDetails/$oSnapshotsList.Length)*100,2)
-    Write-Progress -Activity "Retrieve snapshot details for $($sChooseGame) | $($cntDetails)/$($oSnapshotsList.Length) ($($iPercentComplete)%)..." -PercentComplete $iPercentComplete -Status "Retrieve detail for $($PSItem.ShortId)..."
+    Write-Progress -Activity $($Message.Prg_Activity -f $($sChooseGame), $($cntDetails), $($oSnapshotsList.Length), $($iPercentComplete)) -PercentComplete $iPercentComplete -Status $($Message.Prg_Status -f $($PSItem.ShortId))
 
     $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem
     $aSnapshotListDetails += $oSnapshotDetailStats
 
     $cntDetails++
 }
-Write-Progress -Activity "Snapshot details retrieved!" -Completed
+Write-Progress -Activity $Message.Prg_Complete -Completed
 
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-ShowLogMessage "OTHER" "Snapshot for $($sChooseGame)" ([ref]$sLogFile)
+ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $($sChooseGame) -sLogFile ([ref]$sLogFile)
 
 #$oChooseSnapshot = $aSnapshotListDetails[(Read-SnapshotChoice -Choices $aSnapshotListDetails -Title "Choose a snpashot" -Message "Which Snapshot ?")]
 #$oChooseSnapshot | Format-Table -AutoSize
