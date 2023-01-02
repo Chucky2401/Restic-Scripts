@@ -80,7 +80,7 @@ BEGIN {
         Write-Warning $Message.NoSetFile
         Write-Host $Message.PleaseAnswer
         
-        New-Settings
+        New-Settings -RootPath $PSScriptRoot
     }
     
     $oSettings = Get-Settings -File ".\conf\settings.json"
