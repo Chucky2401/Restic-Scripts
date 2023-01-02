@@ -469,7 +469,7 @@ If (-not (Test-Path ".\conf\settings.json")) {
     Write-Warning "No settings file!"
     Write-Host "Please answer the question below!`r`n"
     
-    New-Settings
+    New-Settings -RootPath $PSScriptRoot
 }
 $oSettings = Get-Settings -File ".\conf\settings.json"
 
