@@ -24,13 +24,12 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 1.2.1
+        Version        : 2.0
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 13/12/2022
-        Change         : Use --password-command instead of --password-file
-                         Use module for common functions
+        Date modified  : 03/01/2023
+        Change         : Settings / Environment / Localized
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
