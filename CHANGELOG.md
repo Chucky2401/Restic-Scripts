@@ -2,6 +2,26 @@
 
 ## 2023.01.03
 
+
+### New
+
+- Add two function to **Set** and **Remove** Restic enivronment
+  - Yes, environment variables are used now instead of files or script variable. You can import this module in a PowerShell session to use it manually!
+- Script is loclized now! Your language is french? Script is in french now!
+  - Precisely, the script will manage en-US and fr-FR. Feel free to ask me for a new language!
+
+### Change
+
+- Rename `func` folder into `modules`
+- Replace Microsoft cmdlet `Start-Process` by the custom command `Start-Command` which use .Net
+- Using a *json* file instead of *ini* file
+  - If the file *settings.json* does not exist, the script will ask questions to create it! Thinking for people don't know (or like 😋) the json!
+  - The setting file is test before run to be sure everything is consistent
+
+### Fix
+
+- Some typo
+
 ### Log
 
 - *090c60a* - chore(img): demo gif
