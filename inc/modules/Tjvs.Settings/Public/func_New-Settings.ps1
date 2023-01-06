@@ -28,7 +28,8 @@ function New-Settings {
     
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
     Param (
-        #Script parameters go here
+        [Parameter(Position = 0, Mandatory = $True)]
+        [PSObject]$RootPath
     )
     
     #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -53,11 +54,11 @@ function New-Settings {
     Import-LocalizedData -BindingVariable "MessageNewSet" -BaseDirectory "local" -FileName "New-Settings.psd1"
     
     $aProperties = @(
-        [PSCustomObject]@{ Property = "Global" ; SubProperty = "Stats" ; Question = $MessageNewSet.global__Stats },
-        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ManualPassword" ; Question = $MessageNewSet.Restic__ManualPassword },
-        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ResticPasswordFile" ; Question = $MessageNewSet.Restic__ResticPasswordFile },
-        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "RepositoryPath" ; Question = $MessageNewSet.Restic__RepositoryPath },
-        [PSCustomObject]@{ Property = "Snapshots" ; SubProperty = "ToKeep" ; Question = $MessageNewSet.Snapshot__ToKeep }
+        [PSCustomObject]@{ Property = "Global" ; SubProperty = "Stats" ; Question = $MessageNewSet.global_Stats },
+        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ManualPassword" ; Question = $MessageNewSet.restic_ManualPassword },
+        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "ResticPasswordFile" ; Question = $MessageNewSet.restic_ResticPasswordFile },
+        [PSCustomObject]@{ Property = "Restic" ; SubProperty = "RepositoryPath" ; Question = $MessageNewSet.restic_RepositoryPath },
+        [PSCustomObject]@{ Property = "Snapshots" ; SubProperty = "ToKeep" ; Question = $MessageNewSet.snapshot_ToKeep }
     )
 
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
@@ -69,11 +70,11 @@ function New-Settings {
 
         switch -Regex ($sSubProperty) {
             "Stats" {
-                $oYes = New-Object System.Management.Automation.Host.ChoiceDescription '&Yes', 'Yes'
-                $oNo = New-Object System.Management.Automation.Host.ChoiceDescription '&No', 'No'
+                $oYes = New-Object System.Management.Automation.Host.ChoiceDescription $MessageNewSet.labelYes, $MessageNewSet.helpYes
+                $oNo = New-Object System.Management.Automation.Host.ChoiceDescription $MessageNewSet.labelNo, $MessageNewSet.helpNo
                 $aOptions = [System.Management.Automation.Host.ChoiceDescription[]]($oYes, $oNo)
 
-                $result = $host.ui.PromptForChoice("", $sQuestion, $aOptions, 0)
+                $result = $host.ui.PromptForChoice("", $sQuestion, $aOptions, 1)
 
                 switch ($result) {
                     0 { $oTemplate.$sProperty.$sSubProperty = $False }
@@ -83,11 +84,11 @@ function New-Settings {
                 break;
             }
             "ManualPassword" {
-                $oYes = New-Object System.Management.Automation.Host.ChoiceDescription '&Yes', 'Yes'
-                $oNo = New-Object System.Management.Automation.Host.ChoiceDescription '&No', 'No'
+                $oYes = New-Object System.Management.Automation.Host.ChoiceDescription $MessageNewSet.labelYes, $MessageNewSet.helpYes
+                $oNo = New-Object System.Management.Automation.Host.ChoiceDescription $MessageNewSet.labelNo, $MessageNewSet.helpNo
                 $aOptions = [System.Management.Automation.Host.ChoiceDescription[]]($oYes, $oNo)
 
-                $result = $host.ui.PromptForChoice("", $sQuestion, $aOptions, 0)
+                $result = $host.ui.PromptForChoice("", $sQuestion, $aOptions, 1)
 
                 switch ($result) {
                     0 { $oTemplate.$sProperty.$sSubProperty = $True }
@@ -102,7 +103,7 @@ function New-Settings {
                 }
 
                 $oFileBrowser = New-Object System.Windows.Forms.SaveFileDialog -Property @{
-                    InitialDirectory = "$($PSScriptRoot)"
+                    InitialDirectory = "$($RootPath)"
                     Title = $sQuestion
                     Filter = "All files (*.*)|*.*"
                 }

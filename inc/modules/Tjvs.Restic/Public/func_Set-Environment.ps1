@@ -34,8 +34,6 @@ function Set-Environment {
     
     #Set Error Action to Silently Continue
     $ErrorActionPreference      = "SilentlyContinue"
-
-    #Import-Module -Name "..\Tjvs.Settings" -Function Get-Settings
     
     If ($PSBoundParameters['Debug']) {
         $DebugPreference = "Continue"
@@ -49,19 +47,15 @@ function Set-Environment {
     
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
     
-    # Settings
-    #$htSettings = Get-Settings ".\conf\settings.ini"
-
     # Password
-    #If ($htSettings['ResticPassordFile'] -eq "manual" -or $htSettings['ResticPassordFile'] -eq "" -or !(Test-Path $htSettings['ResticPasswordFile'])) {
-    If ($oSettings.Restic.ManualPassword -or $oSettings.Restic.ResticPasswordFile -eq "" -or !(Test-Path $oSettings.Restic.ResticPasswordFile)) {
+    If ($Settings.Restic.ManualPassword -or $Settings.Restic.ResticPasswordFile -eq "" -or !(Test-Path $Settings.Restic.ResticPasswordFile)) {
         $sSecurePassword = Read-Host -Prompt "Please enter your Restic password" -AsSecureString
     } Else {
-        $sSecurePassword = Get-Content $oSettings.Restic.ResticPasswordFile | ConvertTo-SecureString
+        $sSecurePassword = Get-Content $Settings.Restic.ResticPasswordFile | ConvertTo-SecureString
     }
     $oCredentials = New-Object System.Management.Automation.PSCredential('restic', $sSecurePassword)
 
     # Env
     $env:RESTIC_PASSWORD   = $oCredentials.GetNetworkCredential().Password
-    $env:RESTIC_REPOSITORY = $oSettings.Restic.RepositoryPath
+    $env:RESTIC_REPOSITORY = $Settings.Restic.RepositoryPath
 }

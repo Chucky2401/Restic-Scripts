@@ -2,19 +2,19 @@ Import-LocalizedData -BindingVariable "MessageDefaultSet" -BaseDirectory "local"
 
 $DefaultSettings = [PSCustomObject]@{
     Global    = [PSCustomObject]@{
-        __Stats = $MessageDefaultSet.global__Stats
+        __Stats = $MessageDefaultSet.global_Stats
         Stats   = $True
     }
     Restic    = [PSCustomObject]@{
-        __ManualPassword     = $MessageDefaultSet.restic__ManualPassword
+        __ManualPassword     = $MessageDefaultSet.restic_ManualPassword
         ManualPassword       = $False
         __ResticPasswordFile = $MessageDefaultSet.restic_ResticPasswordFile
         ResticPasswordFile   = ""
-        __RepositoryPath     = $MessageDefaultSet.repository__RepositoryPath
+        __RepositoryPath     = $MessageDefaultSet.restic_RepositoryPath
         RepositoryPath       = ""
     }
     Snapshots = [PSCustomObject]@{
-        __ToKeep = $MessageDefaultSet.snapshots__ToKeep
+        __ToKeep = $MessageDefaultSet.snapshot_ToKeep
         ToKeep   = 5
     }
 }
