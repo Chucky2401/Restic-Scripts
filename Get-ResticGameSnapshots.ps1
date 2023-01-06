@@ -10,12 +10,12 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 1.2.1
+        Version        : 2.0
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 14/12/2022
-        Change         : Version unification
+        Date modified  : 03/01/2023
+        Change         : Settings / Environment / Localized
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
@@ -35,10 +35,10 @@ $ErrorActionPreference      = "Stop"
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
 
-Import-Module -Name ".\inc\func\Tjvs.Message"
-Import-Module -Name ".\inc\func\Tjvs.Process"
-Import-Module -Name ".\inc\func\Tjvs.Restic"
-Import-Module -Name ".\inc\func\Tjvs.Settings"
+Import-Module -Name ".\inc\modules\Tjvs.Message"
+Import-Module -Name ".\inc\modules\Tjvs.Process"
+Import-Module -Name ".\inc\modules\Tjvs.Restic"
+Import-Module -Name ".\inc\modules\Tjvs.Settings"
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -464,18 +464,18 @@ function Get-SnapshotDetails {
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-$htSettings = Get-Settings "$($PSScriptRoot)\conf\settings.ini"
+# Settings
+If (-not (Test-Path ".\conf\settings.json")) {
+    Write-Warning "No settings file!"
+    Write-Host "Please answer the question below!`r`n"
+    
+    New-Settings -RootPath $PSScriptRoot
+}
+$oSettings = Get-Settings -File ".\conf\settings.json"
 
 # Restic Info
-## Process
-### Command to get password
-$sUnencodedCommand = "Write-Host $($oCredentials.GetNetworkCredential().Password)"
-$sBytesCommand     = [System.Text.Encoding]::Unicode.GetBytes($sUnencodedCommand)
-$sEncodedCommand   = [Convert]::ToBase64String($sBytesCommand)
-Clear-Variable sUnencodedCommand, sBytesCommand             # Clearing useless variable with clear password
-
-### Common restic to use
-$sCommonResticArguments    = "-r `"$($htSettings['RepositoryPath'])`" --password-command `"powershell.exe -EncodedCommand $($sEncodedCommand)`""
+## Envrinoment variable
+Set-Environment -Settings $oSettings
 
 # Info
 ## Hashtable
@@ -501,17 +501,6 @@ Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLog
 Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
 Write-CenterText "*                               *" $sLogFile
 Write-CenterText "*********************************" $sLogFile
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
-
-# Retrieve Password
-ShowLogMessage "INFO" "Retrieve Restic password..." ([ref]$sLogFile)
-If ($htSettings['ResticPassordFile'] -eq "manual" -or $htSettings['ResticPassordFile'] -eq "" -or !(Test-Path $htSettings['ResticPasswordFile'])) {
-    $sSecurePassword = Read-Host -Prompt "Please enter your Restic password" -AsSecureString
-} Else {
-    $sSecurePassword = Get-Content $htSettings['ResticPasswordFile'] | ConvertTo-SecureString
-}
-$oCredentials = New-Object System.Management.Automation.PSCredential('restic', $sSecurePassword)
-
 ShowLogMessage "OTHER" "" ([ref]$sLogFile)
 
 # List games
@@ -554,7 +543,7 @@ $oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
 
 $oSnapshotsList | ForEach-Object {
     $iPercentComplete = [Math]::Round(($cntDetails/$oSnapshotsList.Length)*100,2)
-    Write-Progress -Activity "Retrieve snapshot details for $($sChooseGame) | $($cntDetails+1)/$($oSnapshotsList.Length) ($($iPercentComplete)%)..." -PercentComplete $iPercentComplete -Status "Retrieve detail for $($PSItem.ShortId)..."
+    Write-Progress -Activity "Retrieve snapshot details for $($sChooseGame) | $($cntDetails)/$($oSnapshotsList.Length) ($($iPercentComplete)%)..." -PercentComplete $iPercentComplete -Status "Retrieve detail for $($PSItem.ShortId)..."
 
     $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem
     $aSnapshotListDetails += $oSnapshotDetailStats
@@ -579,3 +568,6 @@ ShowLogMessage "OTHER" "Snapshot for $($sChooseGame)" ([ref]$sLogFile)
 #Write-CenterText "*********************************" $sLogFile
 
 $aSnapshotListDetails
+
+Remove-Environment
+Remove-Module Tjvs.*
