@@ -10,12 +10,12 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 1.2.1
+        Version        : 2.0
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 14/12/2022
-        Change         : Version unification
+        Date modified  : 03/01/2023
+        Change         : Settings / Environment / Localized
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
@@ -473,7 +473,7 @@ If (-not (Test-Path ".\conf\settings.json")) {
     Write-Warning "No settings file!"
     Write-Host "Please answer the question below!`r`n"
     
-    New-Settings
+    New-Settings -RootPath $PSScriptRoot
 }
 $oSettings = Get-Settings -File ".\conf\settings.json"
 
