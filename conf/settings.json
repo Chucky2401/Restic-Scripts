@@ -1,7 +1,7 @@
 {
     "Global": {
-        "__Stats": "Disable totally stats even if the parameter '-NoStats' is not used!",
-        "Stats": false
+        "__Stats": "Disable totally stats when set to 'false' even if the parameter '-NoStats' is not used!",
+        "Stats": true
     },
     "Restic": {
         "__ManualPassword": "Set to true if you want to write your password",
