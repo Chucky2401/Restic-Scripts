@@ -1,7 +1,34 @@
 # Changelog
 
-## 2023.01.03
+## 2023.04.04 - v2 Hotfix 1
 
+### New
+
+- (Get-ResticGameSnapshots): can type **q** to quit without choose a game. Useful when you just want to see how many snapshots per games you have
+
+### Change
+
+- (Clean-Restic): Snapshot to keep is only forced to default value if parameter is not used instead if it is equal to 0. You can remove all snapshots this way.
+- (Clean-Restic): With `-NoDelete` parameter whithout `-Debug` no snapshots to delete are displayed
+- (Get-ResticGameSnapshots): Local message for error when bad input when game choice
+- (settings.json): Better translation for stats parameter
+- Better local message
+
+### Fix
+
+- `ErrorActionPreference` and `DebugPreference` not globally set
+- (Clean-Restic): `TagFilter` does not filter correctly and ignore all snapshots
+- (Clean-Restic): Bad usage of the two first functions `ShowLogMessage` that completely block the script
+
+### Log
+
+- *4e53345* - feat(Clean-Restic): You can remove all snapshots
+- *4b10aa7* - chore(settings): Better translation for stats parameter
+- *6edc7b4* - chore: add local accordingly to new feature for commit *2fdcc3d*
+- *2fdcc3d* - feat(Get-ResticGameSnapshots): able to quit at game choice
+- *291187c* - chore: better local message for english message
+
+## 2023.01.03
 
 ### New
 
