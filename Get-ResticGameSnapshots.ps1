@@ -10,11 +10,11 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 2.0
+        Version        : 2.0.1
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 03/01/2023
+        Date modified  : 30/01/2023
         Change         : Settings / Environment / Localized
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
@@ -30,8 +30,11 @@ Param (
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
 #Set Error Action to Silently Continue
-#$ErrorActionPreference      = "SilentlyContinue"
-$ErrorActionPreference      = "Stop"
+$global:ErrorActionPreference = "Stop"
+$global:DebugPreference       = 'SilentlyContinue'
+If ($PSBoundParameters['Debug']) {
+    $global:DebugPreference = 'Continue'
+}
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
 
@@ -122,10 +125,20 @@ function Read-GameChoice {
         If ($bFirstLoop) {
             $bFirstLoop = $False
         } Else {
-            Write-Host "`nBad choice! Please type a number between square bracket" -ForegroundColor Red
+            Write-Host $Script:Message.Err_GameChoice -ForegroundColor Red
+        }
+        
+        $inputValue = Read-Host -Prompt $Message
+
+        If ($inputValue -eq "q") {
+            Return $inputValue
         }
 
-        $selection = [int](Read-Host -Prompt $Message)
+        Try {
+            $selection = [int]$inputValue
+        } Catch {
+            $selection = -1
+        }
     } While ($selection -lt 1 -or $selection -gt $Choices.Count)
 
     Return $selection-1
@@ -538,7 +551,13 @@ If ($oResticProcess.ExitCode -eq 0) {
 
 ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-$sChooseGame = $aListGames[(Read-GameChoice -Title $Message.Que_GameChoiceTitle -Message $Message.Que_GameChoiceMsg -Choices $aListGames)]
+$gameIndice = Read-GameChoice -Title $Message.Que_GameChoiceTitle -Message $Message.Que_GameChoiceMsg -Choices $aListGames
+If ($gameIndice -eq "q") {
+    ShowMessage "OTHER" ""
+    exit 0
+}
+
+$sChooseGame = $aListGames[$gameIndice]
 
 ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
