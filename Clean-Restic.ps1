@@ -24,11 +24,11 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 2.0
+        Version        : 2.0.1
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 03/01/2023
+        Date modified  : 30/01/2023
         Change         : Settings / Environment / Localized
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
@@ -60,15 +60,16 @@ BEGIN {
     #---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
     #Set Error Action to Silently Continue
-    $ErrorActionPreference = "Stop"
+    $global:ErrorActionPreference = "Stop"
+    $global:DebugPreference       = 'SilentlyContinue'
+    If ($PSBoundParameters['Debug']) {
+        $global:DebugPreference = 'Continue'
+    }
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
     Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
 
-    Import-Module -Name ".\inc\modules\Tjvs.Message"
-    Import-Module -Name ".\inc\modules\Tjvs.Process"
-    Import-Module -Name ".\inc\modules\Tjvs.Restic"
-    Import-Module -Name ".\inc\modules\Tjvs.Settings"
+    Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic", ".\inc\modules\Tjvs.Settings"
 
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -85,7 +86,7 @@ BEGIN {
     $oSettings = Get-Settings -File ".\conf\settings.json"
 
     ## Default settings
-    If ($SnapshotToKeep -eq 0) {
+    If ($PSBoundParameters.ContainsKey('SnapshotToKeep') -eq $False) {
         $SnapshotToKeep = $oSettings.Snapshots.ToKeep
     }
 
@@ -94,9 +95,9 @@ BEGIN {
     Set-Environment -Settings $oSettings
 
     ## Common restic to use
-    $sFilter = "--tag `"$sGame`""
+    $sFilter = "--tag `"$Game`""
     If ($TagFilter -ne "") {
-        $sFilter += ",`"$($TagFilter)`""
+        $sFilter = "--tag `"$Game,$($TagFilter)`""
     }
     
     # Logs
@@ -122,11 +123,11 @@ BEGIN {
     Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
     Write-CenterText "*                               *" $sLogFile
     Write-CenterText "*********************************" $sLogFile
-    ShowLogMessage -type "OTHER" -message "" -sLogFile -sLogFile ([ref]$sLogFile)
+    ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
     If (-not $oSettings.Global.Stats) {
         Write-Warning $Message.Warn_StatsDisable
-        ShowLogMessage -type "OTHER" -message "" -sLogFile -sLogFile ([ref]$sLogFile)
+        ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
         $NoStats = $True
     }
 
@@ -182,7 +183,7 @@ PROCESS {
                     }
                 }
             } Else {
-                ShowLogMessage -type "DEBUG" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
                 $aSnapshotRemoved += $sSnapshotId
             }
         }
@@ -194,7 +195,7 @@ PROCESS {
                 ShowLogMessage -type "SUCCESS" -message $Message.Suc_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
             }
         } Else {
-            ShowLogMessage -type "DEBUG" -message $Message.Dbg_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
+            ShowLogMessage -type "OTHER" -message $Message.Dbg_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
         }
     
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
