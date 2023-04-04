@@ -18,13 +18,15 @@
     ## Error
     ### Get Games
     Err_GetGames = "Impossible de récupérer les jeux (Code sortie: {0})" #0: Exit code Retic
+    ### Game choice
+    Err_GameChoice = "`nMauvais choix! Saisir un nombre entre les crochets ou 'q' pour quitter"
 
     ## Debug
     Dbg_ErrDetail = "Détail de l'erreur :"
 
     ## Question
     Que_GameChoiceTitle = "Pour quel jeu voulez-vous voir les sauvegardes ?"
-    Que_GameChoiceMsg   = "Choix du jeu"
+    Que_GameChoiceMsg   = "Choix du jeu (saisir q pour quitter)"
 
     ## Progress
     Prg_Activity = "Récupération des détails des snapshots pour {0} | {1}/{2} ({3}%)..." #0: Game chose / 1: Current / 2: Total snapshot / 3: Percent

@@ -18,13 +18,15 @@
     ## Error
     ### Get Games
     Err_GetGames = "Not able to get games list! (Exit code: {0})" #0: Exit code Retic
+    ### Game choice
+    Err_GameChoice = "`nBad choice! Please type a number between square bracket or 'q' to quit"
 
     ## Debug
     Dbg_ErrDetail = "Error detail:"
 
     ## Question
     Que_GameChoiceTitle = "For which game do you want to see the saves?"
-    Que_GameChoiceMsg   = "Choose game"
+    Que_GameChoiceMsg   = "Choose game (type q to quit)"
 
     ## Progress
     Prg_Activity = "Retrieve snapshot details for {0} | {1}/{2} ({3}%)..." #0: Game chose / 1: Current / 2: Total snapshot / 3: Percent
