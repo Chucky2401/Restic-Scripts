@@ -67,6 +67,8 @@ BEGIN {
     }
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
+    $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
+
     Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
 
     Import-Module -Name ".\inc\modules\Tjvs.Settings"
@@ -97,8 +99,10 @@ BEGIN {
 
     ## Common restic to use
     $sFilter = "--tag `"$Game`""
+    $messageTagFilter = ""
     If ($TagFilter -ne "") {
         $sFilter = "--tag `"$Game,$($TagFilter)`""
+        $messageTagFilter = $Message.Oth_MessageFilter -f $TagFilter
     }
     
     # Logs
@@ -111,6 +115,7 @@ BEGIN {
 
     # Init Var
     $oDataBefore = $null
+    $cntDetails  = 1
     
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -158,20 +163,29 @@ PROCESS {
             PAUSE
             exit 1
         }
+
+        $numberSnapshotsTotal = $jsResultRestic.Count
+        $numberSnapshotsToRemove = ($jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep).Count
         
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
         
-        ShowLogMessage -type "INFO" -message $Message.Inf_DelSnaps -variable $($sGame),$($SnapshotToKeep) -sLogFile ([ref]$sLogFile)
+        If ($numberSnapshotsTotal -eq $numberSnapshotsToRemove) {
+            ShowLogMessage -type "INFO" -message $Message.Inf_DelSnapsAll -variable $($sGame),$messageTagFilter -sLogFile ([ref]$sLogFile)
+        } Else {
+            ShowLogMessage -type "INFO" -message $Message.Inf_DelSnaps -variable $numberSnapshotsToRemove,$numberSnapshotsTotal,$($sGame),$messageTagFilter -sLogFile ([ref]$sLogFile)
+        }
         $jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
+            $iPercentComplete = [Math]::Round(($cntDetails/$numberSnapshotsToRemove)*100,2)
             $sSnapshotId = $PSItem.short_id
+
+            Write-Progress -Activity $($Message.Prg_Activity -f $($sGame), $($cntDetails), $($numberSnapshotsToRemove), $($iPercentComplete)) -PercentComplete $iPercentComplete -Status $($Message.Prg_Status -f $($sSnapshotId))
+
             If (!$NoDelete) {
                 $oResticProcess = Start-Command -Title "Restic - Forget $($sSnapshotId)" -FilePath restic -ArgumentList "forget --tag `"$sGame`" $sSnapshotId"
             
                 If ($oResticProcess.ExitCode -eq 0) {
                     $aResultDelete     = $oResticProcess.stdout.Split("`n") | Where-Object { $PSItem -ne "" }
                     $aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
-    
-                    ShowLogMessage -type "SUCCESS" -message $Message.Suc_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
                 } Else {
                     $aResultDelete          = $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" }
                     $aSnapshotStillPresent += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
@@ -187,7 +201,9 @@ PROCESS {
                 ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
                 $aSnapshotRemoved += $sSnapshotId
             }
+            $cntDetails++
         }
+        Write-Progress -Activity $Message.Prg_Complete -Completed
     
         If (!$NoDelete) {
             If ($aSnapshotStillPresent.Count -ge 1) {
