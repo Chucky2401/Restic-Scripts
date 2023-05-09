@@ -5,3 +5,6 @@ Get-ChildItem (Split-Path $Script:MyInvocation.MyCommand.Path) -Filter 'func_*.p
 Get-ChildItem "$(Split-Path $Script:MyInvocation.MyCommand.Path)\Public\*" -Filter 'func_*.ps1' -Recurse | ForEach-Object {
     Export-ModuleMember -Function ($PSItem.BaseName -Split "_")[1]
 }
+
+Set-Environment
+$MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = { Remove-Environment }
