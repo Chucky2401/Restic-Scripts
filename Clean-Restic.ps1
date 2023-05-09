@@ -79,23 +79,23 @@ BEGIN {
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
     # Settings
-    If (-not (Test-Path ".\conf\settings.json")) {
-        Write-Warning $Message.NoSetFile
-        Write-Host $Message.PleaseAnswer
-        
-        New-Settings -RootPath $PSScriptRoot
-    }
+    #If (-not (Test-Path ".\conf\settings.json")) {
+    #    Write-Warning $Message.NoSetFile
+    #    Write-Host $Message.PleaseAnswer
+    #    
+    #    New-Settings -RootPath $PSScriptRoot
+    #}
     
-    $oSettings = Get-Settings -File ".\conf\settings.json"
+    #$oSettings = Get-Settings -File ".\conf\settings.json"
 
     ## Default settings
     If ($PSBoundParameters.ContainsKey('SnapshotToKeep') -eq $False) {
-        $SnapshotToKeep = $oSettings.Snapshots.ToKeep
+        $SnapshotToKeep = $global:settings.Snapshots.ToKeep
     }
 
     # Restic Info
     ## Envrinoment variable
-    Set-Environment -Settings $oSettings
+    #Set-Environment -Settings $oSettings
 
     ## Common restic to use
     $sFilter = "--tag `"$Game`""
@@ -131,12 +131,16 @@ BEGIN {
     Write-CenterText "*********************************" $sLogFile
     ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-    If (-not $oSettings.Global.Stats) {
+    If (-not $global:settings.Global.Stats) {
         Write-Warning $Message.Warn_StatsDisable
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
         $NoStats = $True
     }
 
+    ## Demo purpose only!
+    #$NoStats = $True
+    #$NoDelete = $True
+    ## Demo purpose only!
 }
 
 PROCESS {
@@ -199,6 +203,7 @@ PROCESS {
                 }
             } Else {
                 ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                #Start-Sleep -Seconds 2
                 $aSnapshotRemoved += $sSnapshotId
             }
             $cntDetails++
@@ -213,6 +218,7 @@ PROCESS {
             }
         } Else {
             ShowLogMessage -type "OTHER" -message $Message.Dbg_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
+            #ShowLogMessage -type "SUCCESS" -message $Message.Suc_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
         }
     
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
