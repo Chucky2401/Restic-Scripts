@@ -24,7 +24,7 @@ function Set-Environment {
     
     #---------------------------------------------------------[Script Parameters]------------------------------------------------------
     
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
+    [CmdletBinding(SupportsShouldProcess = $False, ConfirmImpact = "Low")]
     Param (
         [Parameter(Position = 0, Mandatory = $False)]
         [PSObject]$Settings = $global:settings
