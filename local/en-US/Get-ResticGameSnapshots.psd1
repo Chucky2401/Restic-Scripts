@@ -20,6 +20,8 @@
     Err_GetGames = "Not able to get games list! (Exit code: {0})" #0: Exit code Retic
     ### Game choice
     Err_GameChoice = "`nBad choice! Please type a number between square bracket or 'q' to quit"
+    ### Game parameter
+    Err_GameChoiceParam = "The game {0} does not exist in the snapshots list" #0: Game choose in parameter
 
     ## Debug
     Dbg_ErrDetail = "Error detail:"

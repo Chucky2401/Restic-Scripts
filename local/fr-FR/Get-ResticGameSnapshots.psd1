@@ -20,6 +20,8 @@
     Err_GetGames = "Impossible de récupérer les jeux (Code sortie: {0})" #0: Exit code Retic
     ### Game choice
     Err_GameChoice = "`nMauvais choix! Saisir un nombre entre les crochets ou 'q' pour quitter"
+    ### Game parameter
+    Err_GameChoiceParam = "Le jeu {0} n'existe pas dans la liste des snapshots" #0: Game choose in parameter
 
     ## Debug
     Dbg_ErrDetail = "Détail de l'erreur :"
