@@ -37,6 +37,7 @@ If ($PSBoundParameters['Debug']) {
 }
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
+$PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
 
 Import-Module -Name ".\inc\modules\Tjvs.Settings"
 Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
