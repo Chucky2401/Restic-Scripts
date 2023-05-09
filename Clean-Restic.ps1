@@ -69,7 +69,8 @@ BEGIN {
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
     Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
 
-    Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic", ".\inc\modules\Tjvs.Settings"
+    Import-Module -Name ".\inc\modules\Tjvs.Settings"
+    Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
 
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
 

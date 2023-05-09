@@ -38,10 +38,8 @@ If ($PSBoundParameters['Debug']) {
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
 
-Import-Module -Name ".\inc\modules\Tjvs.Message"
-Import-Module -Name ".\inc\modules\Tjvs.Process"
-Import-Module -Name ".\inc\modules\Tjvs.Restic"
 Import-Module -Name ".\inc\modules\Tjvs.Settings"
+Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
 
 #Set-PowerShellUICulture en-US
 
