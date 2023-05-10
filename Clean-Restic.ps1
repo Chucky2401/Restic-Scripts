@@ -24,11 +24,11 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 2.0.1
+        Version        : 2.1
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 30/01/2023
+        Date modified  : 10/05/2023
         Change         : Settings / Environment / Localized
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
@@ -67,37 +67,44 @@ BEGIN {
     }
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
+    $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
+
     Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
 
-    Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic", ".\inc\modules\Tjvs.Settings"
+    Import-Module -Name ".\inc\modules\Tjvs.Settings"
+    Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
+
+    #Set-PowerShellUICulture en-US
 
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
     # Settings
-    If (-not (Test-Path ".\conf\settings.json")) {
-        Write-Warning $Message.NoSetFile
-        Write-Host $Message.PleaseAnswer
-        
-        New-Settings -RootPath $PSScriptRoot
-    }
+    #If (-not (Test-Path ".\conf\settings.json")) {
+    #    Write-Warning $Message.NoSetFile
+    #    Write-Host $Message.PleaseAnswer
+    #    
+    #    New-Settings -RootPath $PSScriptRoot
+    #}
     
-    $oSettings = Get-Settings -File ".\conf\settings.json"
+    #$oSettings = Get-Settings -File ".\conf\settings.json"
 
     ## Default settings
     If ($PSBoundParameters.ContainsKey('SnapshotToKeep') -eq $False) {
-        $SnapshotToKeep = $oSettings.Snapshots.ToKeep
+        $SnapshotToKeep = $global:settings.Snapshots.ToKeep
     }
 
     # Restic Info
     ## Envrinoment variable
-    Set-Environment -Settings $oSettings
+    #Set-Environment -Settings $oSettings
 
     ## Common restic to use
     $sFilter = "--tag `"$Game`""
+    $messageTagFilter = ""
     If ($TagFilter -ne "") {
         $sFilter = "--tag `"$Game,$($TagFilter)`""
+        $messageTagFilter = $Message.Oth_MessageFilter -f $TagFilter
     }
     
     # Logs
@@ -110,6 +117,7 @@ BEGIN {
 
     # Init Var
     $oDataBefore = $null
+    $cntDetails  = 1
     
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -125,12 +133,16 @@ BEGIN {
     Write-CenterText "*********************************" $sLogFile
     ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-    If (-not $oSettings.Global.Stats) {
+    If (-not $global:settings.Global.Stats) {
         Write-Warning $Message.Warn_StatsDisable
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
         $NoStats = $True
     }
 
+    ## Demo purpose only!
+    #$NoStats = $True
+    #$NoDelete = $True
+    ## Demo purpose only!
 }
 
 PROCESS {
@@ -157,20 +169,29 @@ PROCESS {
             PAUSE
             exit 1
         }
+
+        $numberSnapshotsTotal = $jsResultRestic.Count
+        $numberSnapshotsToRemove = ($jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep).Count
         
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
         
-        ShowLogMessage -type "INFO" -message $Message.Inf_DelSnaps -variable $($sGame),$($SnapshotToKeep) -sLogFile ([ref]$sLogFile)
+        If ($numberSnapshotsTotal -eq $numberSnapshotsToRemove) {
+            ShowLogMessage -type "INFO" -message $Message.Inf_DelSnapsAll -variable $($sGame),$messageTagFilter -sLogFile ([ref]$sLogFile)
+        } Else {
+            ShowLogMessage -type "INFO" -message $Message.Inf_DelSnaps -variable $numberSnapshotsToRemove,$numberSnapshotsTotal,$($sGame),$messageTagFilter -sLogFile ([ref]$sLogFile)
+        }
         $jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
+            $iPercentComplete = [Math]::Round(($cntDetails/$numberSnapshotsToRemove)*100,2)
             $sSnapshotId = $PSItem.short_id
+
+            Write-Progress -Activity $($Message.Prg_Activity -f $($sGame), $($cntDetails), $($numberSnapshotsToRemove), $($iPercentComplete)) -PercentComplete $iPercentComplete -Status $($Message.Prg_Status -f $($sSnapshotId))
+
             If (!$NoDelete) {
                 $oResticProcess = Start-Command -Title "Restic - Forget $($sSnapshotId)" -FilePath restic -ArgumentList "forget --tag `"$sGame`" $sSnapshotId"
             
                 If ($oResticProcess.ExitCode -eq 0) {
                     $aResultDelete     = $oResticProcess.stdout.Split("`n") | Where-Object { $PSItem -ne "" }
                     $aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
-    
-                    ShowLogMessage -type "SUCCESS" -message $Message.Suc_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
                 } Else {
                     $aResultDelete          = $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" }
                     $aSnapshotStillPresent += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
@@ -184,9 +205,12 @@ PROCESS {
                 }
             } Else {
                 ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                #Start-Sleep -Seconds 2
                 $aSnapshotRemoved += $sSnapshotId
             }
+            $cntDetails++
         }
+        Write-Progress -Activity $Message.Prg_Complete -Completed
     
         If (!$NoDelete) {
             If ($aSnapshotStillPresent.Count -ge 1) {
@@ -196,6 +220,7 @@ PROCESS {
             }
         } Else {
             ShowLogMessage -type "OTHER" -message $Message.Dbg_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
+            #ShowLogMessage -type "SUCCESS" -message $Message.Suc_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
         }
     
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)

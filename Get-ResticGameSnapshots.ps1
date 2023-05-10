@@ -10,11 +10,11 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 2.0.1
+        Version        : 2.1
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 30/01/2023
+        Date modified  : 10/05/2023
         Change         : Settings / Environment / Localized
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
@@ -22,9 +22,13 @@
 
 #---------------------------------------------------------[Script Parameters]------------------------------------------------------
 
-[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low", DefaultParameterSetName = 'None')]
 Param (
-    #Script parameters go here
+    # Parameter help description
+    [Parameter(Mandatory = $False, ParameterSetName = "GameName")]
+    [String]$Game,
+    [Parameter(Mandatory = $False, ParameterSetName = "Count")]
+    [Switch]$CountOnly
 )
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -37,11 +41,10 @@ If ($PSBoundParameters['Debug']) {
 }
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
+$PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
 
-Import-Module -Name ".\inc\modules\Tjvs.Message"
-Import-Module -Name ".\inc\modules\Tjvs.Process"
-Import-Module -Name ".\inc\modules\Tjvs.Restic"
 Import-Module -Name ".\inc\modules\Tjvs.Settings"
+Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
 
 #Set-PowerShellUICulture en-US
 
@@ -272,9 +275,9 @@ function Get-SnapshotsCount {
     # Select
     $oSelectTags = @{Label = "tags" ; Expression = {$PSItem.tags[0]}}
 
-    $htGameSnapshotsCount = @{}
+    $htGameSnapshotsCount = [ordered]@{}
 
-    $ResticOutObject | Select-Object $oSelectTags | Group-Object -Property tags | ForEach-Object {
+    $ResticOutObject | Select-Object $oSelectTags | Sort-Object tags | Group-Object -Property tags | ForEach-Object {
         $htGameSnapshotsCount.Add($PSItem.Name, $PSItem.Count)
     }
 
@@ -482,21 +485,21 @@ function Get-SnapshotDetails {
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 # Settings
-If (-not (Test-Path ".\conf\settings.json")) {
-    Write-Warning "No settings file!"
-    Write-Host "Please answer the question below!`r`n"
-    
-    New-Settings -RootPath $PSScriptRoot
-}
-$oSettings = Get-Settings -File ".\conf\settings.json"
+#If (-not (Test-Path ".\conf\settings.json")) {
+#    Write-Warning "No settings file!"
+#    Write-Host "Please answer the question below!`r`n"
+#    
+#    New-Settings -RootPath $PSScriptRoot
+#}
+#$oSettings = Get-Settings -File ".\conf\settings.json"
 
 # Restic Info
 ## Envrinoment variable
-Set-Environment -Settings $oSettings
+#Set-Environment -Settings $oSettings
 
 # Info
 ## Hashtable
-$htGameSnapshotsCount = @{}
+$htGameSnapshotsCount = [ordered]@{}
 
 # Logs
 $sLogPath = "$($PSScriptRoot)\logs"
@@ -549,12 +552,36 @@ If ($oResticProcess.ExitCode -eq 0) {
     exit 1
 }
 
+If ($CountOnly) {
+    $htGameSnapshotsCount.GetEnumerator() | Select-Object @{ Label = "Game" ; Expression = {$PSItem.Name} }, @{ Label = "Snapshots" ; Expression = {$PSItem.Value} }
+    ShowMessage -type "OTHER" -message ""
+    
+    Remove-Module Tjvs.*
+    exit 0
+}
+
 ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-$gameIndice = Read-GameChoice -Title $Message.Que_GameChoiceTitle -Message $Message.Que_GameChoiceMsg -Choices $aListGames
-If ($gameIndice -eq "q") {
-    ShowMessage "OTHER" ""
-    exit 0
+If ([String]::IsNullOrEmpty($Game)) {
+    $gameIndice = Read-GameChoice -Title $Message.Que_GameChoiceTitle -Message $Message.Que_GameChoiceMsg -Choices $aListGames
+    If ($gameIndice -eq "q") {
+        ShowMessage "OTHER" ""
+        
+        Remove-Module Tjvs.*
+        exit 0
+    }
+}
+
+If (-not [String]::IsNullOrEmpty($Game)) {
+    $gameIndice = $aListGames.IndexOf($Game)
+}
+
+If ($gameIndice -eq -1) {
+    ShowMessage -type "ERROR" -message $Message.Err_GameChoiceParam -variable $($Game)
+    ShowMessage -type "OTHER" -message ""
+    
+    Remove-Module Tjvs.*
+    exit 1
 }
 
 $sChooseGame = $aListGames[$gameIndice]
@@ -592,5 +619,4 @@ ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $($sChoos
 
 $aSnapshotListDetails
 
-Remove-Environment
 Remove-Module Tjvs.*

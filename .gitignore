@@ -1,3 +1,5 @@
 misc/
-logs/
+logs/*
 doc/perso/
+
+!/logs/.gitkeep

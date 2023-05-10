@@ -26,6 +26,8 @@ function Get-Settings {
         [string]$File = ".\conf\settings.json"
     )
 
+    Test-SettingsFile
+
     $oSettings = Get-Content $File | ConvertFrom-Json
 
     $bValidSettings = Test-Settings -Settings $oSettings
