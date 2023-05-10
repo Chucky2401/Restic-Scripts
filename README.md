@@ -98,11 +98,11 @@ The most important part of this Readme!
 
 1. Download all the files and folders, and put it in folder of your choice and create a folder named `logs` if necessary
 2. Run the script in a PowerShell console!
-At the the first run, the script will ask you a couple of questions to create all the settings.
+At the the first run, the script will ask you a couple of questions to create all the settings.[^1]
 
 #### Clean-Restic - Examples
 
-1. .\Clean-Restic.ps1 -Game "V Rising"
+1. .\Clean-Restic.ps1 -Game "V Rising" [^2]
 Will clean snapshots for the game "V Rising" and keep the 5 latest snapshots
 
 2. .\Clean-Restic.ps1 -Game "Cyberpunk 2077" -SnapshotToKeep 1
@@ -111,7 +111,7 @@ Will clean snapshots for the game "Cyberpunk 2077" and keep the latest snapshot
 3. .\Clean-Restic.ps1 -Game "Raft" -SnapshotToKeep 10 -NoDelete
 Will show you the snapshots that should be deleted
 
-4. .\Clean-Restic.ps1 -Game "Project Zomboid" -TagFilter "gameplay" -SnapshotToKeep 0
+4. .\Clean-Restic.ps1 -Game "Project Zomboid" -TagFilter "gameplay" -SnapshotToKeep 0 [^3]
 Will remove all the gameplay sansphots for Project Zomboid
 
 ### Get-ResticGameSnapshots
@@ -176,10 +176,17 @@ Refer to [Clean-Restic - How to use](#clean-restic---how-to-use)
 
 1. Complete example for *Weed Shop 3*
   .\Get-ResticGameSnapshots.ps1 | Format-Table -Autosize
-  ![Weed Shop 3](https://i.imgur.com/IIFbM5wl.png)
-2. Example for *Cyberpunk 2077*
-  .\Get-ResticGameSnapshots.ps1 | Format-Table -Autosize
-  ![Cyberpunk 2077](https://i.imgur.com/1NFt3gal.png)
-3. Complete example for *GhostWire: Tokyo* in format list
-  .\Get-ResticGameSnapshots.ps1 | Format-List
-  ![GhostWire: Tokyo](https://i.imgur.com/C6RBGhrl.png)
+  ![Weed Shop 3](https://i.imgur.com/02drKGN.png)
+2. Example for *V Rising* [^4] [^5]
+  .\Get-ResticGameSnapshots.ps1 -Game "V Rising" | Format-Table -Autosize
+  ![V Rising](https://i.imgur.com/62hkYed.png)
+3. Shows the 10 games with the most snapshots [^6]
+  .\Get-ResticGameSnapshots.ps1 -CountOnly | Sort-Object Snapshots | Select-Object -Last 10
+  ![Count](https://i.imgur.com/mW6IQcK.png)
+
+[^1]: Settings creation in action: [FR](img\FR\Demo_Settings.gif) / [EN](img\EN\Demo_Settings.gif)
+[^2]: Cleaning snapshots with default parameter in action: [FR](img\FR\Demo_Clean\Défaut.gif) / [EN](img\EN\Demo_Clean\Default.gif)
+[^3]: Cleaning all gameplay snapshots in action: [FR](img\FR\Demo_Clean\Tous_avec_filtre.gif) / [EN](img\EN\Demo_Clean\All_with_filter.gif)
+[^4]: Get snapshots for a game and format as table: [FR](img\FR\Demo_Get\Param_Game_et_Format-Table.gif) / [EN](img\EN\Demo_Get\Param_Game_and_Format-Table.gif)
+[^5]: If game does not exist: [FR](img\FR\Demo_Get\Param_Game_Inexistant.gif) / [EN](img\EN\Demo_Get\Param_Game_does_not_exist.gif)
+[^6]: Show the 10 games with the most snapshots: [FR](img\FR\Demo_Get\Param_CountOnly_Limit.gif) / [EN](img\EN\Demo_Get\CountOnly_Limit.gif)
