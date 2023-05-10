@@ -24,11 +24,11 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 2.0.1
+        Version        : 2.1
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 30/01/2023
+        Date modified  : 10/05/2023
         Change         : Settings / Environment / Localized
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
@@ -73,6 +73,8 @@ BEGIN {
 
     Import-Module -Name ".\inc\modules\Tjvs.Settings"
     Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
+
+    #Set-PowerShellUICulture en-US
 
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
