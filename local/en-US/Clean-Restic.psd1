@@ -23,7 +23,7 @@
     Suc_GetSnaps = "We got them!"
     ### Delete
     Suc_DelSnaps = "Snapshot #{0} removed successfully!" # 0: Snapshot ID
-    Suc_SumDel   = "All the {0} has been removed successfully!" # 0: Number of snapshots removed
+    Suc_SumDel   = "All the {0} snapshots has been removed successfully!" # 0: Number of snapshots removed
     ### Prune
     Suc_Prune = "Restic repository has been cleaned!"
 
