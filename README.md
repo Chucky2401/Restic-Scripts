@@ -184,7 +184,7 @@ Refer to [Clean-Restic - How to use](#clean-restic---how-to-use)
   `.\Get-ResticGameSnapshots.ps1 -CountOnly | Sort-Object Snapshots | Select-Object -Last 10`
   ![Count](https://i.imgur.com/mW6IQcK.png)
 
-[^1]: Settings creation in action: [FR](img/FR/Demo_Settings.gif) / [EN](img/EN/Demo_Settings.gif)
+[^1]: Settings creation in action: [FR](../blob/img/FR/Demo_Settings.gif) / [EN](img/EN/Demo_Settings.gif)
 [^2]: Cleaning snapshots with default parameter in action: [FR](img/FR/Demo_Clean/Défaut.gif) / [EN](img/EN/Demo_Clean/Default.gif)
 [^3]: Cleaning all gameplay snapshots in action: [FR](img/FR/Demo_Clean/Tous_avec_filtre.gif) / [EN](img/EN/Demo_Clean/All_with_filter.gif)
 [^4]: Get snapshots for a game and format as table: [FR](img/FR/Demo_Get/Param_Game_et_Format-Table.gif) / [EN](img/EN/Demo_Get/Param_Game_and_Format-Table.gif)
