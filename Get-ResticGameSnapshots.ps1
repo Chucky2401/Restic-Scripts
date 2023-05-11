@@ -4,6 +4,10 @@
     .DESCRIPTION
         Ask you the game you want to see snapshots in Restic (get them from Restic directly).
         After your choice, show you all the information and details about the snapshots
+    .PARAMETER Game
+        Set directly the game name to filter without the script ask you the game.
+    .PARAMETER CountOnly
+        Show you the game list with the number of snapshots only
     .OUTPUTS
         Logs actions in case of crash
     .EXAMPLE
@@ -14,8 +18,8 @@
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 10/05/2023
-        Change         : Settings / Environment / Localized
+        Date modified  : 11/05/2023
+        Change         : New parameters
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
