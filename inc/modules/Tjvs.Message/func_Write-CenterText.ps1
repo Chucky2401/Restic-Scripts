@@ -36,7 +36,7 @@ function Write-CenterText {
     $sFinalString     = $sString.PadLeft($nSizePaddingLeft, " ").PadRight($nSizePaddingLeft, " ")
 
     Write-Host $sFinalString
-    If ($null -ne $sLogFile) {
+    If (-not [String]::IsNullOrEmpty($sLogFile)) {
         Write-Output $sFinalString | Out-File $sLogFile -Encoding utf8 -Append
     }
 }

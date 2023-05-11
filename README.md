@@ -31,10 +31,11 @@ I will describe each scripts.
 At the moment, there is this script available only:
 
 - Clean-Restic
+- Get-ResticGameSnapshots
 
 This script is on beta:
 
-- Get-ResticGameSnapshots
+- *Nothing for the moment*
 
 I plan to do this script (not exhaustive):
 
@@ -45,10 +46,10 @@ I plan to do this script (not exhaustive):
 
 This first script help me to clean my Restic repository for a specific game.
 It takes **at least the game name** as parameter. This parameter is used to filter **Restic snapshots by tag**.
-You have three more optional parameters:
+You have four more optional parameters:
 
-- **TagFilter** *(string)*: Let you filter the snapshots of the game.
-- **SnapshotToKeep** *(string[])*: by default set on 5. You can specify how many snapshots you want to keep.
+- **TagFilter** *(string)*: Let you filter the snapshots of the game (eg: gameplay, manual).
+- **SnapshotToKeep** *(int)*: by default set in the setting file. You can specify how many snapshots you want to keep.
 - **NoDelete** *(switch)*: if you want to run the script without delete any snapshots, like a dry run.
 - **NoStats** *(switch)*: if you don't want the script show you the stats about your repository
 
@@ -84,47 +85,51 @@ If you use the parameter `NoDelete` you will only have the current stats of your
 
 This script has only been testing with:
 
-- [**PowerShell Core** 7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
+- **PowerShellCore**
+  - [7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
+  - [7.3.x](https://github.com/PowerShell/PowerShell/releases/tag/v7.3.4)
 - **Restic**
   - [0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
   - [0.14.0 compiled with go1.19 on windows/amd64](https://restic.net)
+  - [0.15.2 compiled with go1.20.3 on windows/amd64](https://restic.net)
 
 #### Clean-Restic - How to use
 
 The most important part of this Readme!
 
-1. Download all the files and folders, and put it in folder of your choice and create a folder named `logs`
-2. I recommend you to create a file with your Restic password store as an encrypted string. If you don't want to do that, go to the step 5.
-3. Open a PowerShell Console, and use this command to create the file: `Read-Host "Enter New Password" -AsSecureString |  ConvertFrom-SecureString | Out-File D:\Restic.txt`
-*Change `D:\Restic.txt` by the path and the filename of your choice.*
-4. Type your password and validate by `Enter`
-5. Open the file `conf\settings.ini` and edit the variables as below:
-   - **ResticPasswordFile**: The path to the file you set on step 3. If you leave it empty or type **manual** you will have to type it at the beginning of the script.
-   - **RepositoryPath**: The path to your Restic repository
-6. Run the script in a PowerShell console!
+1. Download all the files and folders, and put it in folder of your choice and create a folder named `logs` if necessary
+2. Run the script in a PowerShell console!
+At the the first run, the script will ask you a couple of questions to create all the settings.[^1]
 
 #### Clean-Restic - Examples
 
-1. .\Clean-Restic.ps1 -Game "V Rising"
+1. `.\Clean-Restic.ps1 -Game "V Rising"` [^2]
 Will clean snapshots for the game "V Rising" and keep the 5 latest snapshots
 
-2. .\Clean-Restic.ps1 -Game "Cyberpunk 2077" -SnapshotToKeep 1
+2. `.\Clean-Restic.ps1 -Game "Cyberpunk 2077" -SnapshotToKeep 1`
 Will clean snapshots for the game "Cyberpunk 2077" and keep the latest snapshot
 
-3. .\Clean-Restic.ps1 -Game "Raft" -SnapshotToKeep 10 -NoDelete
+3. `.\Clean-Restic.ps1 -Game "Raft" -SnapshotToKeep 10 -NoDelete`
 Will show you the snapshots that should be deleted
+
+4. `.\Clean-Restic.ps1 -Game "Project Zomboid" -TagFilter "gameplay" -SnapshotToKeep 0` [^3]
+Will remove all the gameplay sansphots for Project Zomboid
 
 ### Get-ResticGameSnapshots
 
 This script help me to list my Restic snapshot for a specific game. You don't have to know the tag in Restic, it will list you unique game tag at the beginning.
-This script don't need any parameter.
+You have two optional parameters:
+
+- **CountOnly** *(switch)*: only show a list of game with their number of snapshots.
+You can use PowerShell cmdlets (`Select-Object`, `Sort-Object`, `Format-*` and `Where-Object`) to filter precisely.
+- **Game** *(string)*: let you set the game that you want to show snapshots details.
+If you are wrong on the game name, an error message will appear and stop.
 
 You can use the common parameters of PowerShell (-Debug, -Verbose, etc.).
 You can also use the `Format-*` cmdlet to pipeline (see [examples](#get-resticgamesnapshots---examples) below)
 
 The Get-Help command works too:
-**Only with the parameter `-online` at the moment**
-`Get-Help .\Get-ResticGameSnapshots.ps1 -online`
+`Get-Help .\Get-ResticGameSnapshots.ps1`
 
 The script will generate a log file for each run and show you at the end the list of snapshot for the game you choose.
 Example:
@@ -155,10 +160,13 @@ Raft 8940034c 11/07/2022 16:50:06 stopped        29         2.83 MiB        30  
 
 This script has only been testing with:
 
-- [**PowerShell Core** 7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
+- **PowerShellCore**
+  - [7.2.5](https://github.com/PowerShell/PowerShell/releases/tag/v7.2.5)
+  - [7.3.x](https://github.com/PowerShell/PowerShell/releases/tag/v7.3.4)
 - **Restic**
   - [0.13.1 compiled with go1.18 on windows/amd64](https://restic.net)
   - [0.14.0 compiled with go1.19 on windows/amd64](https://restic.net)
+  - [0.15.2 compiled with go1.20.3 on windows/amd64](https://restic.net)
 
 #### Get-ResticGameSnapshots - How to use
 
@@ -167,11 +175,18 @@ Refer to [Clean-Restic - How to use](#clean-restic---how-to-use)
 #### Get-ResticGameSnapshots - Examples
 
 1. Complete example for *Weed Shop 3*
-  .\Get-ResticGameSnapshots.ps1 | Format-Table -Autosize
-  ![Weed Shop 3](https://i.imgur.com/IIFbM5wl.png)
-2. Example for *Cyberpunk 2077*
-  .\Get-ResticGameSnapshots.ps1 | Format-Table -Autosize
-  ![Cyberpunk 2077](https://i.imgur.com/1NFt3gal.png)
-3. Complete example for *GhostWire: Tokyo* in format list
-  .\Get-ResticGameSnapshots.ps1 | Format-List
-  ![GhostWire: Tokyo](https://i.imgur.com/C6RBGhrl.png)
+  `.\Get-ResticGameSnapshots.ps1 | Format-Table -Autosize`
+  ![Weed Shop 3](https://i.imgur.com/02drKGN.png)
+2. Example for *V Rising* [^4] [^5]
+  `.\Get-ResticGameSnapshots.ps1 -Game "V Rising" | Format-Table -Autosize`
+  ![V Rising](https://i.imgur.com/62hkYed.png)
+3. Shows the 10 games with the most snapshots [^6]
+  `.\Get-ResticGameSnapshots.ps1 -CountOnly | Sort-Object Snapshots | Select-Object -Last 10`
+  ![Count](https://i.imgur.com/mW6IQcK.png)
+
+[^1]: Settings creation in action: [FR](../blob/main/img/FR/Demo_Settings.gif) / [EN](../blob/main/img/EN/Demo_Settings.gif)
+[^2]: Cleaning snapshots with default parameter in action: [FR](../blob/main/img/FR/Demo_Clean/Défaut.gif) / [EN](../blob/main/img/EN/Demo_Clean/Default.gif)
+[^3]: Cleaning all gameplay snapshots in action: [FR](../blob/main/img/FR/Demo_Clean/Tous_avec_filtre.gif) / [EN](../blob/main/img/EN/Demo_Clean/All_with_filter.gif)
+[^4]: Get snapshots for a game and format as table: [FR](../blob/main/img/FR/Demo_Get/Param_Game_et_Format-Table.gif) / [EN](../blob/main/img/EN/Demo_Get/Param_Game_and_Format-Table.gif)
+[^5]: If game does not exist: [FR](../blob/main/img/FR/Demo_Get/Param_Game_Inexistant.gif) / [EN](../blob/main/img/EN/Demo_Get/Param_Game_does_not_exist.gif)
+[^6]: Show the 10 games with the most snapshots: [FR](../blob/main/img/FR/Demo_Get/Param_CountOnly_Limit.gif) / [EN](../blob/main/img/EN/Demo_Get/CountOnly_Limit.gif)

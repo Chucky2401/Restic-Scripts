@@ -1,13 +1,53 @@
 # Changelog
 
-## 2023.01.03
-
+## 2023.05.11 - v2.1
 
 ### New
 
-- Add two function to **Set** and **Remove** Restic enivronment
+- (Get-ResticGameSnapshots): can type **q** to quit without choose a game. Useful when you just want to see how many snapshots per games you have
+- (Get-ResticGameSnapshots): add two parameters:
+  - `CountOnly`: to only show number of snapshots per game
+  - `Game`: to set the game that we want the snapshots detail
+- (Tjvs.Settings): Settings var is automatically created when module is imported
+
+### Change
+
+- (Clean-Restic): Snapshot to keep is only forced to default value if parameter is not used instead if it is equal to 0. You can remove all snapshots this way.
+- (Clean-Restic): With `-NoDelete` parameter without `-Debug` no snapshots to delete are displayed
+- (Get-ResticGameSnapshots): Local message for error when bad input when game choice
+- (settings.json): Better translation for stats parameter
+- (Clean-Restic): progress bar instead of a multitude of message to informe snapshots has been removed
+- (Tjvs.Restic): this module as Tjvs.Settings module as required now. By the way, when the module is imported, the environment is set with `Set-Environment` and, the environment is removed with `Remove-environment` when you remove it.
+- Better local message
+
+### Fix
+
+- `ErrorActionPreference` and `DebugPreference` not globally set
+- (Clean-Restic): `TagFilter` does not filter correctly and ignore all snapshots
+- (Clean-Restic): Bad usage of the two first functions `ShowLogMessage` that completely block the script
+
+### Log
+
+*Only relevant commit*
+
+- *4e53345* - feat(Clean-Restic): You can remove all snapshots
+- *4b10aa7* - chore(settings): Better translation for stats parameter
+- *6edc7b4* - chore: add local accordingly to new feature for commit *2fdcc3d*
+- *2fdcc3d* - feat(Get-ResticGameSnapshots): able to quit at game choice
+- *291187c* - chore: better local message for english message
+- *b6e4796* - chore(Tjvs.Settings): add creation of settings var
+- *d71a1d0* - feat(Clean-Restic): visual update for the remove steps. Easier to understand and less useless messages
+- *8e78af6* - feat(Tjvs.Restic): add Tjvs.Settings modules as required
+- *b107912* - feat(Tjvs.Restic): Set-Environment call when module is imported. Call Remove-Environment when module is removed
+- *f867394* - feat(Get-ResticGameSnapshots): add parameters CountOnly and Game.
+
+## 2023.01.03
+
+### New
+
+- Add two function to **Set** and **Remove** Restic environment
   - Yes, environment variables are used now instead of files or script variable. You can import this module in a PowerShell session to use it manually!
-- Script is loclized now! Your language is french? Script is in french now!
+- Script is localized now! Your language is french? Script is in french now!
   - Precisely, the script will manage en-US and fr-FR. Feel free to ask me for a new language!
 
 ### Change

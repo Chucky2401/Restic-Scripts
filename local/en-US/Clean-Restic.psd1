@@ -10,7 +10,8 @@
     ### Get
     Inf_GetSnaps = "Get {0} snapshots list from Restic in JSON..." # 0: Game
     ### Delete
-    Inf_DelSnaps = "Delete {0} older snapshots and keep only the {1} latest..." # 0: Game / 1: Snapshots number to keep
+    Inf_DelSnaps    = "Delete {0} of {1} snapshots for {2}{3}..." # 0: Number snapshots to remove / 1: Snapshots total / 2: Game / 3: Filter (optional)
+    Inf_DelSnapsAll = "Remove all snapshots for {0}{1}..." # 2: Game / 1: Filter (optional)
     ### Prune
     Inf_Prune = "Cleaning (prune) repository..."
     ### Stats
@@ -22,7 +23,7 @@
     Suc_GetSnaps = "We got them!"
     ### Delete
     Suc_DelSnaps = "Snapshot #{0} removed successfully!" # 0: Snapshot ID
-    Suc_SumDel   = "All the {0} has been removed successfully!" # 0: Number of snapshots removed
+    Suc_SumDel   = "All the {0} snapshots has been removed successfully!" # 0: Number of snapshots removed
     ### Prune
     Suc_Prune = "Restic repository has been cleaned!"
 
@@ -46,7 +47,14 @@
     ### Prune
     Dbg_PruneDetail = "Prune detail:"
 
+    ## Progress
+    Prg_Activity = "Remove {0} snapshots | {1}/{2} ({3}%)..." #0: Game chose / 1: Current / 2: Total snapshot / 3: Percent
+    Prg_Status   = "Remove snapshot #{0}..." #0: Snapshot ID
+    Prg_Complete = "Finish to remove snapshots!"
+
     ## Other
+    ### Filter
+    Oth_MessageFilter = " (Filter: {0})" # 0: Tag filter
     ### Stats
     #### Before only
     Oth_BfrSnapNbr  = "`tSnapshot numbers:   {0}"      # 0: Snapshots number before

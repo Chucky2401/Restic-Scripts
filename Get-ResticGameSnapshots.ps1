@@ -4,41 +4,55 @@
     .DESCRIPTION
         Ask you the game you want to see snapshots in Restic (get them from Restic directly).
         After your choice, show you all the information and details about the snapshots
+    .PARAMETER Game
+        Set directly the game name to filter without the script ask you the game.
+    .PARAMETER CountOnly
+        Show you the game list with the number of snapshots only
     .OUTPUTS
         Logs actions in case of crash
     .EXAMPLE
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 2.0
+        Version        : 2.1
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 03/01/2023
-        Change         : Settings / Environment / Localized
+        Date modified  : 11/05/2023
+        Change         : New parameters
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
 
 #---------------------------------------------------------[Script Parameters]------------------------------------------------------
 
-[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low", DefaultParameterSetName = 'None')]
 Param (
-    #Script parameters go here
+    # Parameter help description
+    [Parameter(Mandatory = $False, ParameterSetName = "GameName")]
+    [String]$Game,
+    [Parameter(Mandatory = $False, ParameterSetName = "Count")]
+    [Switch]$CountOnly
 )
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
 #Set Error Action to Silently Continue
-#$ErrorActionPreference      = "SilentlyContinue"
-$ErrorActionPreference      = "Stop"
+$global:ErrorActionPreference = "Stop"
+$global:DebugPreference       = 'SilentlyContinue'
+If ($PSBoundParameters['Debug']) {
+    $global:DebugPreference = 'Continue'
+}
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
+$PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
 
-Import-Module -Name ".\inc\modules\Tjvs.Message"
-Import-Module -Name ".\inc\modules\Tjvs.Process"
-Import-Module -Name ".\inc\modules\Tjvs.Restic"
 Import-Module -Name ".\inc\modules\Tjvs.Settings"
+Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
+
+#Set-PowerShellUICulture en-US
+
+Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Get-ResticGameSnapshots.psd1"
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -118,10 +132,20 @@ function Read-GameChoice {
         If ($bFirstLoop) {
             $bFirstLoop = $False
         } Else {
-            Write-Host "`nBad choice! Please type a number between square bracket" -ForegroundColor Red
+            Write-Host $Script:Message.Err_GameChoice -ForegroundColor Red
+        }
+        
+        $inputValue = Read-Host -Prompt $Message
+
+        If ($inputValue -eq "q") {
+            Return $inputValue
         }
 
-        $selection = [int](Read-Host -Prompt $Message)
+        Try {
+            $selection = [int]$inputValue
+        } Catch {
+            $selection = -1
+        }
     } While ($selection -lt 1 -or $selection -gt $Choices.Count)
 
     Return $selection-1
@@ -255,9 +279,9 @@ function Get-SnapshotsCount {
     # Select
     $oSelectTags = @{Label = "tags" ; Expression = {$PSItem.tags[0]}}
 
-    $htGameSnapshotsCount = @{}
+    $htGameSnapshotsCount = [ordered]@{}
 
-    $ResticOutObject | Select-Object $oSelectTags | Group-Object -Property tags | ForEach-Object {
+    $ResticOutObject | Select-Object $oSelectTags | Sort-Object tags | Group-Object -Property tags | ForEach-Object {
         $htGameSnapshotsCount.Add($PSItem.Name, $PSItem.Count)
     }
 
@@ -465,21 +489,21 @@ function Get-SnapshotDetails {
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 # Settings
-If (-not (Test-Path ".\conf\settings.json")) {
-    Write-Warning "No settings file!"
-    Write-Host "Please answer the question below!`r`n"
-    
-    New-Settings -RootPath $PSScriptRoot
-}
-$oSettings = Get-Settings -File ".\conf\settings.json"
+#If (-not (Test-Path ".\conf\settings.json")) {
+#    Write-Warning "No settings file!"
+#    Write-Host "Please answer the question below!`r`n"
+#    
+#    New-Settings -RootPath $PSScriptRoot
+#}
+#$oSettings = Get-Settings -File ".\conf\settings.json"
 
 # Restic Info
 ## Envrinoment variable
-Set-Environment -Settings $oSettings
+#Set-Environment -Settings $oSettings
 
 # Info
 ## Hashtable
-$htGameSnapshotsCount = @{}
+$htGameSnapshotsCount = [ordered]@{}
 
 # Logs
 $sLogPath = "$($PSScriptRoot)\logs"
@@ -501,10 +525,10 @@ Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLog
 Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
 Write-CenterText "*                               *" $sLogFile
 Write-CenterText "*********************************" $sLogFile
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
 # List games
-ShowLogMessage "INFO" "Retrieve game in Restic repository..." ([ref]$sLogFile)
+ShowLogMessage -type "INFO" -message $Message.Inf_GetGames -sLogFile ([ref]$sLogFile)
 $oResticProcess = Start-Command -Title "Restic Snapshots" -FilePath restic -ArgumentList "$($sCommonResticArguments) --json snapshots"
 
 If ($oResticProcess.ExitCode -eq 0) {
@@ -518,13 +542,13 @@ If ($oResticProcess.ExitCode -eq 0) {
     # Hashtable of games and snapshots count per game
     $htGameSnapshotsCount = Get-SnapshotsCount -ResticOutObject $jsResultRestic
 
-    ShowLogMessage "SUCCESS" "Games have been retrieved!" ([ref]$sLogFile)
+    ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetGames -sLogFile ([ref]$sLogFile)
 } Else {
-    ShowLogMessage "ERROR" "Not able to get games list! (Exit code: $($oResticProcess.ExitCode)" ([ref]$sLogFile)
+    ShowLogMessage -type "ERROR" -message $Message.Err_GetGames -variable $($oResticProcess.ExitCode) -sLogFile ([ref]$sLogFile)
     If ($PSBoundParameters['Debug']) {
-        ShowLogMessage "DEBUG" "Error detail:" ([ref]$sLogFile)
+        ShowLogMessage -type "DEBUG" -message $Message.Dbg_ErrDetail -sLogFile ([ref]$sLogFile)
         $oResticProcess.stderr | Where-Object { $PSItem -ne "" } | ForEach-Object {
-            ShowLogMessage "OTHER" "`t$($PSItem)" ([ref]$sLogFile)
+            ShowLogMessage -type "OTHER" -message "`t$($PSItem)" -sLogFile ([ref]$sLogFile)
         }
     }
 
@@ -532,29 +556,59 @@ If ($oResticProcess.ExitCode -eq 0) {
     exit 1
 }
 
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+If ($CountOnly) {
+    $htGameSnapshotsCount.GetEnumerator() | Select-Object @{ Label = "Game" ; Expression = {$PSItem.Name} }, @{ Label = "Snapshots" ; Expression = {$PSItem.Value} }
+    ShowMessage -type "OTHER" -message ""
+    
+    Remove-Module Tjvs.*
+    exit 0
+}
 
-$sChooseGame = $aListGames[(Read-GameChoice -Title "For which game do you want to see the saves?" -Message "Choose game" -Choices $aListGames)]
+ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+If ([String]::IsNullOrEmpty($Game)) {
+    $gameIndice = Read-GameChoice -Title $Message.Que_GameChoiceTitle -Message $Message.Que_GameChoiceMsg -Choices $aListGames
+    If ($gameIndice -eq "q") {
+        ShowMessage "OTHER" ""
+        
+        Remove-Module Tjvs.*
+        exit 0
+    }
+}
 
-ShowLogMessage "INFO" "Retrieve snapshots for $($sChooseGame)..." ([ref]$sLogFile)
+If (-not [String]::IsNullOrEmpty($Game)) {
+    $gameIndice = $aListGames.IndexOf($Game)
+}
+
+If ($gameIndice -eq -1) {
+    ShowMessage -type "ERROR" -message $Message.Err_GameChoiceParam -variable $($Game)
+    ShowMessage -type "OTHER" -message ""
+    
+    Remove-Module Tjvs.*
+    exit 1
+}
+
+$sChooseGame = $aListGames[$gameIndice]
+
+ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
+
+ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sChooseGame) -sLogFile ([ref]$sLogFile)
 $oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
 
 $oSnapshotsList | ForEach-Object {
     $iPercentComplete = [Math]::Round(($cntDetails/$oSnapshotsList.Length)*100,2)
-    Write-Progress -Activity "Retrieve snapshot details for $($sChooseGame) | $($cntDetails)/$($oSnapshotsList.Length) ($($iPercentComplete)%)..." -PercentComplete $iPercentComplete -Status "Retrieve detail for $($PSItem.ShortId)..."
+    Write-Progress -Activity $($Message.Prg_Activity -f $($sChooseGame), $($cntDetails), $($oSnapshotsList.Length), $($iPercentComplete)) -PercentComplete $iPercentComplete -Status $($Message.Prg_Status -f $($PSItem.ShortId))
 
     $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem
     $aSnapshotListDetails += $oSnapshotDetailStats
 
     $cntDetails++
 }
-Write-Progress -Activity "Snapshot details retrieved!" -Completed
+Write-Progress -Activity $Message.Prg_Complete -Completed
 
-ShowLogMessage "OTHER" "" ([ref]$sLogFile)
+ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-ShowLogMessage "OTHER" "Snapshot for $($sChooseGame)" ([ref]$sLogFile)
+ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $($sChooseGame) -sLogFile ([ref]$sLogFile)
 
 #$oChooseSnapshot = $aSnapshotListDetails[(Read-SnapshotChoice -Choices $aSnapshotListDetails -Title "Choose a snpashot" -Message "Which Snapshot ?")]
 #$oChooseSnapshot | Format-Table -AutoSize
@@ -569,5 +623,4 @@ ShowLogMessage "OTHER" "Snapshot for $($sChooseGame)" ([ref]$sLogFile)
 
 $aSnapshotListDetails
 
-Remove-Environment
 Remove-Module Tjvs.*
