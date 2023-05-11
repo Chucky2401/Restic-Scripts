@@ -1,6 +1,6 @@
 # Changelog
 
-## 2023.05.09 - v2.1
+## 2023.05.11 - v2.1
 
 ### New
 
@@ -13,7 +13,7 @@
 ### Change
 
 - (Clean-Restic): Snapshot to keep is only forced to default value if parameter is not used instead if it is equal to 0. You can remove all snapshots this way.
-- (Clean-Restic): With `-NoDelete` parameter whithout `-Debug` no snapshots to delete are displayed
+- (Clean-Restic): With `-NoDelete` parameter without `-Debug` no snapshots to delete are displayed
 - (Get-ResticGameSnapshots): Local message for error when bad input when game choice
 - (settings.json): Better translation for stats parameter
 - (Clean-Restic): progress bar instead of a multitude of message to informe snapshots has been removed

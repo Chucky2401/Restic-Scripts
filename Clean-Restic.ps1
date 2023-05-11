@@ -28,8 +28,8 @@
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 10/05/2023
-        Change         : Settings / Environment / Localized
+        Date modified  : 11/05/2023
+        Change         : Visual enhancement
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
