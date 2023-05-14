@@ -14,17 +14,19 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 2.1
+        Version        : 2.2
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 11/05/2023
-        Change         : New parameters
+        Date modified  : 14/05/2023
+        Change         : Action on snapshots!
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
 
 #---------------------------------------------------------[Script Parameters]------------------------------------------------------
+
+Using namespace System.Management.Automation.Host
 
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low", DefaultParameterSetName = 'None')]
 Param (
@@ -505,7 +507,15 @@ $sLogFile = "$($sLogPath)\$($sLogName)"
 
 $aSnapshotListDetails = @()
 $cntDetails           = 0
-$snapshotsNumber          = 1
+$snapshotsNumber      = 1
+
+# Menu
+$Title    = $Message.Oth_TitleActionMenu
+$Question = $Message.Que_ActionMenu
+$clean    = [ChoiceDescription]::new($Message.Men_CleanTitle, $Message.Men_CleanDescription)
+$delete   = [ChoiceDescription]::new($Message.Men_DeleteTitle, $Message.Men_DeleteDescription)
+$quit     = [ChoiceDescription]::new($Message.Men_QuitTitle, $Message.Men_QuitDescription)
+$options  = [ChoiceDescription[]]($clean, $delete, $quit)
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -598,10 +608,47 @@ $oSnapshotsList | ForEach-Object {
 }
 Write-Progress -Activity $Message.Prg_Complete -Completed
 
-ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
+do {
+    Clear-Host
+    ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $sChooseGame -sLogFile ([ref]$sLogFile)
 
-$snapshotsChoose = $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}} | Out-GridView -OutputMode Multiple -Title $($Message.Oth_ListSnaps -f $sChooseGame)
+    $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}} | Format-Table -AutoSize
 
-#$snapshotsChoose
+    $result = $host.ui.PromptForChoice($Title, $Question, $options, 0)
+
+    ShowMessage -type "OTHER" -message ""
+
+    switch ($result) {
+        0 { 
+            ShowMessage -type "OTHER" -message "*** Start cleaning after ask filter!"
+            Start-Sleep -Seconds 2
+            Break
+        }
+        1 {
+            $snapshotsChoose = $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}} | Out-GridView -OutputMode Multiple -Title "Choose snapshots to delete"
+            ShowMessage -type "OTHER" -message "*** Snapshots would be deleted:"
+            $snapshotsChoose | Format-Table -AutoSize
+            Start-Sleep -Second 2
+
+            $delete = [String]::Join("|", $snapshotsChoose.shortId)
+            $i = 1
+
+            $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
+            $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
+                $PSItem.Number = $i
+                $i++
+            }
+
+            $aSnapshotListDetails = $newList
+            Break
+        }
+        2 {
+            Break
+        }
+        Default {
+            ShowMessage -type "ERROR" -message $Message.Err_GenericChoice
+        }
+    }
+} while ($result -ne 2)
 
 Remove-Module Tjvs.*

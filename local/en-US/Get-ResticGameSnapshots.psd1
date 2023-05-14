@@ -22,6 +22,8 @@
     Err_GameChoice = "`nBad choice! Please type a number between square bracket or 'q' to quit"
     ### Game parameter
     Err_GameChoiceParam = "The game {0} does not exist in the snapshots list" #0: Game choose in parameter
+    ### Generic
+    Err_GenericChoice = "Invalid choice. Please try again"
 
     ## Debug
     Dbg_ErrDetail = "Error detail:"
@@ -29,6 +31,15 @@
     ## Question
     Que_GameChoiceTitle = "For which game do you want to see the saves?"
     Que_GameChoiceMsg   = "Choose game (type q to quit)"
+    Que_ActionMenu      = "What would like to do with snapshots?"
+
+    ## Menu
+    Men_CleanTitle        = "&Clean"
+    Men_CleanDescription  = "Clean snapshots"
+    Men_DeleteTitle       = "&Delete"
+    Men_DeleteDescription = "Delete choose snapshots"
+    Men_QuitTitle         = "&Quit"
+    Men_QuitDescription   = "Quit"
 
     ## Progress
     Prg_Activity = "Retrieve snapshot details for {0} | {1}/{2} ({3}%)..." #0: Game chose / 1: Current / 2: Total snapshot / 3: Percent
@@ -36,5 +47,6 @@
     Prg_Complete = "Snapshot details retrieved!"
 
     ## Other
-    Oth_ListSnaps = "Snapshot for {0}" #0: Game chose
+    Oth_ListSnaps       = "Snapshot for {0}" #0: Game chose
+    Oth_TitleActionMenu = "Action on snapshot"
 }
