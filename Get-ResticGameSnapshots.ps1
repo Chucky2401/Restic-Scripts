@@ -409,7 +409,9 @@ function Get-SnapshotDetails {
     Param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $Snapshot
+        [Object]$Snapshot,
+        [Parameter(Mandatory = $True)]
+        [Int]$Number
     )
     
     $oSnapshotStats = Get-ResticStats -SnapshotId $Snapshot.Id
@@ -463,6 +465,7 @@ function Get-SnapshotDetails {
 
     $oSnapshotDetails   = [PSCustomObject]@{
         PSTypeName      = 'Tjvs.Restic.SnapshotsStats'
+        Number          = $Number
         Game            = $Snapshot.Game
         Id              = $Snapshot.Id
         ShortId         = $Snapshot.ShortId
@@ -502,6 +505,7 @@ $sLogFile = "$($sLogPath)\$($sLogName)"
 
 $aSnapshotListDetails = @()
 $cntDetails           = 0
+$snapshotsNumber          = 1
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -586,10 +590,11 @@ $oSnapshotsList | ForEach-Object {
     $iPercentComplete = [Math]::Round(($cntDetails/$oSnapshotsList.Length)*100,2)
     Write-Progress -Activity $($Message.Prg_Activity -f $($sChooseGame), $($cntDetails), $($oSnapshotsList.Length), $($iPercentComplete)) -PercentComplete $iPercentComplete -Status $($Message.Prg_Status -f $($PSItem.ShortId))
 
-    $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem
+    $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem -Number $snapshotsNumber
     $aSnapshotListDetails += $oSnapshotDetailStats
 
     $cntDetails++
+    $snapshotsNumber++
 }
 Write-Progress -Activity $Message.Prg_Complete -Completed
 
