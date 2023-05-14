@@ -14,6 +14,8 @@
     .PARAMETER NoStats
         Do not show stats at the end of the script.
         Stats will show you the difference between and after removing snapshots.
+    .PARAMETER FromGet
+        If we call this script from Get-ResticGameSnapshots to not remove modules!
     .EXAMPLE
         .\Clean-Restic.ps1 "V Rising" 10
 
@@ -24,12 +26,12 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 2.1
+        Version        : 2.2
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 11/05/2023
-        Change         : Visual enhancement
+        Date modified  : 14/05/2023
+        Change         : Feature if call from Get and enhancement for filter
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
@@ -44,7 +46,7 @@ Param (
     [string[]]$Game,
     [Parameter(Mandatory = $False)]
     [Alias("f")]
-    [string]$TagFilter = "",
+    [string[]]$TagFilter = "",
     [Parameter(Mandatory = $False)]
     [Alias("stk")]
     [int]$SnapshotToKeep,
@@ -53,7 +55,10 @@ Param (
     [Switch]$NoDelete,
     [Parameter(Mandatory = $False)]
     [Alias("ns")]
-    [Switch]$NoStats
+    [Switch]$NoStats,
+    [Parameter(Mandatory = $False)]
+    [Alias("fg")]
+    [Switch]$FromGet
 )
 
 BEGIN {
@@ -86,12 +91,17 @@ BEGIN {
     }
 
     ## Common restic to use
-    $sFilter = "--tag `"$Game`""
-    $messageTagFilter = ""
-    If ($TagFilter -ne "") {
-        $sFilter = "--tag `"$Game,$($TagFilter)`""
-        $messageTagFilter = $Message.Oth_MessageFilter -f $TagFilter
+    $sFilter          = "--tag `"$Game`""
+    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join(" or ", $TagFilter))
+
+    #If ($TagFilter -ne "") {
+    If (-not [String]::IsNullOrEmpty($TagFilter)) {
+        $sFilter = ""
+        $TagFilter | ForEach-Object {
+            $sFilter += " --tag `"$Game,$($PSItem)`""
+        }
     }
+    $sFilter = $sFilter.Trim()
     
     # Logs
     $sLogPath = "$($PSScriptRoot)\logs"
@@ -276,5 +286,7 @@ END {
     Write-CenterText "*********************************" $sLogFile
 
     # Cleaning
-    Remove-Module Tjvs.*
+    If (-not $FromGet) {
+        Remove-Module Tjvs.*
+    }
 }
