@@ -47,7 +47,7 @@ If ($PSBoundParameters['Debug']) {
 }
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
-$PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
+$PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
 
 Import-Module -Name ".\inc\modules\Tjvs.Settings"
 Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
@@ -620,8 +620,54 @@ do {
 
     switch ($result) {
         0 { 
-            ShowMessage -type "OTHER" -message "*** Start cleaning after ask filter!"
-            Start-Sleep -Seconds 2
+            #ShowMessage -type "OTHER" -message "*** Start cleaning after ask filter!"
+            
+            $filters = $global:settings.Filters | Out-GridView -OutputMode Multiple -Title $Message.View_ChooseFilters
+            
+            $bFirstLoop = $True
+            do {
+                If ($bFirstLoop) {
+                    $bFirstLoop = $False
+                } Else {
+                    Write-Host $Message.Err_SnapshotsTokeep -ForegroundColor Red
+                }
+                
+                $inputValue = Read-Host -Prompt ($Message.Que_SnapshotsToKeep -f $global:settings.Snapshots.ToKeep)
+        
+                If ([String]::IsNullOrEmpty($inputValue)) {
+                    $inputValue = $global:settings.Snapshots.ToKeep
+                }
+        
+                Try {
+                    $selection = [int]$inputValue
+                } Catch {
+                    $selection = -1
+                }
+            } While ($selection -lt 0)
+            $snapshotsToKeep = $selection
+
+            
+            If ($null -ne $filters) {
+                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -TagFilter $filters -SnapshotToKeep $snapshotsToKeep -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
+            }
+
+            If ($null -eq $filters) {
+                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -SnapshotToKeep $snapshotsToKeep -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
+            }
+
+            If ($null -ne $snapshotsRemoved) {
+                $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
+                $i = 1
+    
+                $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
+                $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
+                    $PSItem.Number = $i
+                    $i++
+                }
+    
+                $aSnapshotListDetails = $newList
+            }
+            
             Break
         }
         1 {
