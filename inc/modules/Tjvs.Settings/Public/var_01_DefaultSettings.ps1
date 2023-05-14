@@ -17,4 +17,5 @@ $DefaultSettings = [PSCustomObject]@{
         __ToKeep = $MessageDefaultSet.snapshot_ToKeep
         ToKeep   = 5
     }
+    Filters = @("gameplay", "manual", "stopped")
 }

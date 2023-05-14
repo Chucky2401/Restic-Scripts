@@ -121,6 +121,10 @@
                 <ListEntry>
                     <ListItems>
                         <ListItem>
+                            <Label>No.</Label>
+                            <PropertyName>Number</PropertyName>
+                        </ListItem>
+                        <ListItem>
                             <Label>Game</Label>
                             <PropertyName>Game</PropertyName>
                         </ListItem>
@@ -167,6 +171,11 @@
         </ViewSelectedBy>
         <TableControl>
             <TableHeaders>
+                <TableColumnHeader>
+                    <Label>No.</Label>
+                    <Width>4</Width>
+                    <Alignment>Right</Alignment>
+                </TableColumnHeader>
                 <TableColumnHeader>
                     <Label>Game</Label>
                     <Width>13</Width>
@@ -217,6 +226,9 @@
                 <TableRowEntry>
                     <Wrap />
                     <TableColumnItems>
+                        <TableColumnItem>
+                            <PropertyName>Number</PropertyName>
+                        </TableColumnItem>
                         <TableColumnItem>
                             <PropertyName>Game</PropertyName>
                         </TableColumnItem>

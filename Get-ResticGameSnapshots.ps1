@@ -14,17 +14,19 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 2.1
+        Version        : 3.0-Beta.1
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 11/05/2023
-        Change         : New parameters
+        Date modified  : 14/05/2023
+        Change         : Action on snapshots!
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
 
 #---------------------------------------------------------[Script Parameters]------------------------------------------------------
+
+Using namespace System.Management.Automation.Host
 
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low", DefaultParameterSetName = 'None')]
 Param (
@@ -45,7 +47,7 @@ If ($PSBoundParameters['Debug']) {
 }
 
 Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
-$PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
+$PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
 
 Import-Module -Name ".\inc\modules\Tjvs.Settings"
 Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
@@ -409,7 +411,9 @@ function Get-SnapshotDetails {
     Param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $Snapshot
+        [Object]$Snapshot,
+        [Parameter(Mandatory = $True)]
+        [Int]$Number
     )
     
     $oSnapshotStats = Get-ResticStats -SnapshotId $Snapshot.Id
@@ -463,6 +467,7 @@ function Get-SnapshotDetails {
 
     $oSnapshotDetails   = [PSCustomObject]@{
         PSTypeName      = 'Tjvs.Restic.SnapshotsStats'
+        Number          = $Number
         Game            = $Snapshot.Game
         Id              = $Snapshot.Id
         ShortId         = $Snapshot.ShortId
@@ -488,19 +493,6 @@ function Get-SnapshotDetails {
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-# Settings
-#If (-not (Test-Path ".\conf\settings.json")) {
-#    Write-Warning "No settings file!"
-#    Write-Host "Please answer the question below!`r`n"
-#    
-#    New-Settings -RootPath $PSScriptRoot
-#}
-#$oSettings = Get-Settings -File ".\conf\settings.json"
-
-# Restic Info
-## Envrinoment variable
-#Set-Environment -Settings $oSettings
-
 # Info
 ## Hashtable
 $htGameSnapshotsCount = [ordered]@{}
@@ -515,6 +507,15 @@ $sLogFile = "$($sLogPath)\$($sLogName)"
 
 $aSnapshotListDetails = @()
 $cntDetails           = 0
+$snapshotsNumber      = 1
+
+# Menu
+$Title    = $Message.Oth_TitleActionMenu
+$Question = $Message.Que_ActionMenu
+$clean    = [ChoiceDescription]::new($Message.Men_CleanTitle, $Message.Men_CleanDescription)
+$delete   = [ChoiceDescription]::new($Message.Men_DeleteTitle, $Message.Men_DeleteDescription)
+$quit     = [ChoiceDescription]::new($Message.Men_QuitTitle, $Message.Men_QuitDescription)
+$options  = [ChoiceDescription[]]($clean, $delete, $quit)
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -599,28 +600,99 @@ $oSnapshotsList | ForEach-Object {
     $iPercentComplete = [Math]::Round(($cntDetails/$oSnapshotsList.Length)*100,2)
     Write-Progress -Activity $($Message.Prg_Activity -f $($sChooseGame), $($cntDetails), $($oSnapshotsList.Length), $($iPercentComplete)) -PercentComplete $iPercentComplete -Status $($Message.Prg_Status -f $($PSItem.ShortId))
 
-    $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem
+    $oSnapshotDetailStats = Get-SnapshotDetails -Snapshot $PSItem -Number $snapshotsNumber
     $aSnapshotListDetails += $oSnapshotDetailStats
 
     $cntDetails++
+    $snapshotsNumber++
 }
 Write-Progress -Activity $Message.Prg_Complete -Completed
 
-ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
+do {
+    Clear-Host
+    ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $sChooseGame -sLogFile ([ref]$sLogFile)
 
-ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $($sChooseGame) -sLogFile ([ref]$sLogFile)
+    $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}} | Format-Table -AutoSize
 
-#$oChooseSnapshot = $aSnapshotListDetails[(Read-SnapshotChoice -Choices $aSnapshotListDetails -Title "Choose a snpashot" -Message "Which Snapshot ?")]
-#$oChooseSnapshot | Format-Table -AutoSize
+    $result = $host.ui.PromptForChoice($Title, $Question, $options, 0)
 
-#Write-CenterText "*********************************" $sLogFile
-#Write-CenterText "*                               *" $sLogFile
-#Write-CenterText "*      List Game Snapshot       *" $sLogFile
-#Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-#Write-CenterText "*           End $(Get-Date -Format 'HH:mm')           *" $sLogFile
-#Write-CenterText "*                               *" $sLogFile
-#Write-CenterText "*********************************" $sLogFile
+    ShowMessage -type "OTHER" -message ""
 
-$aSnapshotListDetails
+    switch ($result) {
+        0 {            
+            $filters = $global:settings.Filters | Out-GridView -OutputMode Multiple -Title $Message.View_ChooseFilters
+            
+            $bFirstLoop = $True
+            do {
+                If ($bFirstLoop) {
+                    $bFirstLoop = $False
+                } Else {
+                    Write-Host $Message.Err_SnapshotsTokeep -ForegroundColor Red
+                }
+                
+                $inputValue = Read-Host -Prompt ($Message.Que_SnapshotsToKeep -f $global:settings.Snapshots.ToKeep)
+        
+                If ([String]::IsNullOrEmpty($inputValue)) {
+                    $inputValue = $global:settings.Snapshots.ToKeep
+                }
+        
+                Try {
+                    $selection = [int]$inputValue
+                } Catch {
+                    $selection = -1
+                }
+            } While ($selection -lt 0)
+            $snapshotsToKeep = $selection
+
+            
+            If ($null -ne $filters) {
+                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -TagFilter $filters -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
+            }
+
+            If ($null -eq $filters) {
+                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
+            }
+
+            If ($null -ne $snapshotsRemoved) {
+                $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
+                $i = 1
+    
+                $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
+                $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
+                    $PSItem.Number = $i
+                    $i++
+                }
+    
+                $aSnapshotListDetails = $newList
+            }
+            
+            Break
+        }
+        1 {
+            $snapshotsChoose = $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}} | Out-GridView -OutputMode Multiple -Title "Choose snapshots to delete"
+            ShowMessage -type "OTHER" -message "*** Snapshots would be deleted:"
+            $snapshotsChoose | Format-Table -AutoSize
+            Start-Sleep -Second 2
+
+            $delete = [String]::Join("|", $snapshotsChoose.shortId)
+            $i = 1
+
+            $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
+            $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
+                $PSItem.Number = $i
+                $i++
+            }
+
+            $aSnapshotListDetails = $newList
+            Break
+        }
+        2 {
+            Break
+        }
+        Default {
+            ShowMessage -type "ERROR" -message $Message.Err_GenericChoice
+        }
+    }
+} while ($result -ne 2)
 
 Remove-Module Tjvs.*

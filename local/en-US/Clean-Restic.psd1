@@ -70,6 +70,8 @@
     Oth_BothBlob     = "`tTotal blobs:        {0} / {1}"      # 0: Total blob before / 1: Total blob after
     Oth_BothBlobSize = "`tTotal blobs size:   {0} / {1}"      # 0: Blob size before / 1: Blob size after
     Oth_BothRatio    = "`tRatio:              {0} % / {1} %"  # 0: Ratio before / 1: Ratio after
+    ### Misc
+    Oth_Or = " or "
 
     ## Test
     Msg1 = "An english message"

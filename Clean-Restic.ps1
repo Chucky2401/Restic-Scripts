@@ -14,6 +14,8 @@
     .PARAMETER NoStats
         Do not show stats at the end of the script.
         Stats will show you the difference between and after removing snapshots.
+    .PARAMETER FromGet
+        If we call this script from Get-ResticGameSnapshots to not remove modules!
     .EXAMPLE
         .\Clean-Restic.ps1 "V Rising" 10
 
@@ -24,12 +26,12 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 2.1
+        Version        : 3.0-Beta.1
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
-        Date modified  : 11/05/2023
-        Change         : Visual enhancement
+        Date modified  : 14/05/2023
+        Change         : Feature if call from Get and enhancement for filter
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
@@ -38,22 +40,25 @@
 
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
 Param (
-    [Parameter(Mandatory = $true, ValueFromPipeline)]
+    [Parameter(Mandatory = $True, ValueFromPipeline)]
     [ValidateNotNullOrEmpty()]
     [Alias("g")]
     [string[]]$Game,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $False)]
     [Alias("f")]
-    [string]$TagFilter = "",
-    [Parameter(Mandatory = $false)]
+    [string[]]$TagFilter = "",
+    [Parameter(Mandatory = $False)]
     [Alias("stk")]
     [int]$SnapshotToKeep,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $False)]
     [Alias("nd")]
     [Switch]$NoDelete,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $False)]
     [Alias("ns")]
-    [Switch]$NoStats
+    [Switch]$NoStats,
+    [Parameter(Mandatory = $False)]
+    [Alias("fg")]
+    [Switch]$FromGet
 )
 
 BEGIN {
@@ -80,32 +85,23 @@ BEGIN {
 
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-    # Settings
-    #If (-not (Test-Path ".\conf\settings.json")) {
-    #    Write-Warning $Message.NoSetFile
-    #    Write-Host $Message.PleaseAnswer
-    #    
-    #    New-Settings -RootPath $PSScriptRoot
-    #}
-    
-    #$oSettings = Get-Settings -File ".\conf\settings.json"
-
     ## Default settings
     If ($PSBoundParameters.ContainsKey('SnapshotToKeep') -eq $False) {
         $SnapshotToKeep = $global:settings.Snapshots.ToKeep
     }
 
-    # Restic Info
-    ## Envrinoment variable
-    #Set-Environment -Settings $oSettings
-
     ## Common restic to use
-    $sFilter = "--tag `"$Game`""
-    $messageTagFilter = ""
-    If ($TagFilter -ne "") {
-        $sFilter = "--tag `"$Game,$($TagFilter)`""
-        $messageTagFilter = $Message.Oth_MessageFilter -f $TagFilter
+    $sFilter          = "--tag `"$Game`""
+    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join($Message.Oth_Or, $TagFilter))
+
+    #If ($TagFilter -ne "") {
+    If (-not [String]::IsNullOrEmpty($TagFilter)) {
+        $sFilter = ""
+        $TagFilter | ForEach-Object {
+            $sFilter += " --tag `"$Game,$($PSItem)`""
+        }
     }
+    $sFilter = $sFilter.Trim()
     
     # Logs
     $sLogPath = "$($PSScriptRoot)\logs"
@@ -124,13 +120,15 @@ BEGIN {
     $aSnapshotRemoved      = @()
     $aSnapshotStillPresent = @()
 
-    Write-CenterText "*********************************" $sLogFile
-    Write-CenterText "*                               *" $sLogFile
-    Write-CenterText "*      Restic clean backup      *" $sLogFile
-    Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-    Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
-    Write-CenterText "*                               *" $sLogFile
-    Write-CenterText "*********************************" $sLogFile
+    If (-not $FromGet){
+        Write-CenterText "*********************************" $sLogFile
+        Write-CenterText "*                               *" $sLogFile
+        Write-CenterText "*      Restic clean backup      *" $sLogFile
+        Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
+        Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
+        Write-CenterText "*                               *" $sLogFile
+        Write-CenterText "*********************************" $sLogFile
+    }
     ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
     If (-not $global:settings.Global.Stats) {
@@ -139,10 +137,10 @@ BEGIN {
         $NoStats = $True
     }
 
-    ## Demo purpose only!
+    ##! Demo purpose only!
     #$NoStats = $True
     #$NoDelete = $True
-    ## Demo purpose only!
+    ##! Demo purpose only!
 }
 
 PROCESS {
@@ -204,8 +202,11 @@ PROCESS {
                     }
                 }
             } Else {
-                ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                #ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                ##! Demo purpose only!
+                #$aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", "OK!") }
                 #Start-Sleep -Seconds 2
+                ##! Demo purpose only!
                 $aSnapshotRemoved += $sSnapshotId
             }
             $cntDetails++
@@ -220,7 +221,9 @@ PROCESS {
             }
         } Else {
             ShowLogMessage -type "OTHER" -message $Message.Dbg_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
+            ##! Demo purpose only!
             #ShowLogMessage -type "SUCCESS" -message $Message.Suc_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
+            ##! Demo purpose only!
         }
     
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
@@ -281,15 +284,19 @@ END {
         ShowLogMessage -type "OTHER" -message $Message.Oth_BfrRatio -variable $($oDataBefore.Ratio) -sLogFile ([ref]$sLogFile)
     }
 
-    Write-CenterText "*********************************" $sLogFile
-    Write-CenterText "*                               *" $sLogFile
-    Write-CenterText "*      Restic clean backup      *" $sLogFile
-    Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-    Write-CenterText "*           End $(Get-Date -Format 'HH:mm')           *" $sLogFile
-    Write-CenterText "*                               *" $sLogFile
-    Write-CenterText "*********************************" $sLogFile
+    If (-not $FromGet) {
+        Write-CenterText "*********************************" $sLogFile
+        Write-CenterText "*                               *" $sLogFile
+        Write-CenterText "*      Restic clean backup      *" $sLogFile
+        Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
+        Write-CenterText "*           End $(Get-Date -Format 'HH:mm')           *" $sLogFile
+        Write-CenterText "*                               *" $sLogFile
+        Write-CenterText "*********************************" $sLogFile
 
-    # Cleaning
-    Remove-Environment
-    Remove-Module Tjvs.*
+        Remove-Module Tjvs.*
+    }
+
+    If ($FromGet) {
+        Return $aSnapshotRemoved
+    }
 }
