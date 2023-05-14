@@ -14,7 +14,7 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 2.2
+        Version        : 3.0-PreRelease.1
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
@@ -619,9 +619,7 @@ do {
     ShowMessage -type "OTHER" -message ""
 
     switch ($result) {
-        0 { 
-            #ShowMessage -type "OTHER" -message "*** Start cleaning after ask filter!"
-            
+        0 {            
             $filters = $global:settings.Filters | Out-GridView -OutputMode Multiple -Title $Message.View_ChooseFilters
             
             $bFirstLoop = $True
