@@ -48,7 +48,7 @@ This first script help me to clean my Restic repository for a specific game.
 It takes **at least the game name** as parameter. This parameter is used to filter **Restic snapshots by tag**.
 You have four more optional parameters:
 
-- **TagFilter** *(string)*: Let you filter the snapshots of the game (eg: gameplay, manual).
+- **TagFilter** *(string[])*: Let you filter the snapshots of the game (eg: gameplay, manual). Take all snapshots that have tag1 or tag2, etc.
 - **SnapshotToKeep** *(int)*: by default set in the setting file. You can specify how many snapshots you want to keep.
 - **NoDelete** *(switch)*: if you want to run the script without delete any snapshots, like a dry run.
 - **NoStats** *(switch)*: if you don't want the script show you the stats about your repository
@@ -126,7 +126,6 @@ You can use PowerShell cmdlets (`Select-Object`, `Sort-Object`, `Format-*` and `
 If you are wrong on the game name, an error message will appear and stop.
 
 You can use the common parameters of PowerShell (-Debug, -Verbose, etc.).
-You can also use the `Format-*` cmdlet to pipeline (see [examples](#get-resticgamesnapshots---examples) below)
 
 The Get-Help command works too:
 `Get-Help .\Get-ResticGameSnapshots.ps1`
@@ -135,26 +134,24 @@ The script will generate a log file for each run and show you at the end the lis
 Example:
 
 ```powershell
-Game ShortId             DateTime Tags    No. Files Total Files Size No. Blobs Total Blobs Size  Ratio
----- -------             -------- ----    --------- ---------------- --------- ----------------  -----
-Raft 5205211a 25/06/2022 13:23:12 stopped        19       940.73 KiB        20       946.35 KiB  100,6
-Raft 95c83e6f 25/06/2022 17:58:25 stopped        27         2.21 MiB        28         2.22 MiB 100,36
-Raft 967ca033 26/06/2022 16:12:01 stopped        29          2.6 MiB        30         2.61 MiB 100,31
-Raft d2d5dea4 26/06/2022 17:06:51 stopped        29          2.6 MiB        30         2.61 MiB 100,31
-Raft 94b6198d 26/06/2022 17:34:26 stopped        29         2.61 MiB        30         2.62 MiB 100,31
-Raft b5a9838f 27/06/2022 08:41:32 stopped        29         2.63 MiB        30         2.64 MiB 100,34
-Raft 9211b9ab 27/06/2022 13:23:16 stopped        29         2.65 MiB        30         2.66 MiB  100,3
-Raft b0df7638 27/06/2022 15:33:08 stopped        29         2.66 MiB        30         2.67 MiB  100,3
-Raft 79d79912 28/06/2022 08:43:42 stopped        29         2.67 MiB        30         2.68 MiB  100,3
-Raft 6dd5e255 28/06/2022 09:19:11 stopped        29         2.67 MiB        30         2.67 MiB  100,3
-Raft 40d79b4f 28/06/2022 11:05:54 stopped        29         2.69 MiB        30          2.7 MiB  100,3
-Raft f516ad76 28/06/2022 17:06:08 stopped        29          2.7 MiB        30         2.71 MiB  100,3
-Raft 76c746c0 29/06/2022 15:09:26 stopped        29         2.72 MiB        30         2.73 MiB 100,29
-Raft 28c462ef 29/06/2022 16:03:06 stopped        29         2.75 MiB        30         2.75 MiB 100,29
-Raft 61a7f899 29/06/2022 18:15:45 stopped        29         2.78 MiB        30         2.78 MiB 100,29
-Raft c55d3ceb 30/06/2022 10:41:19 stopped        29         2.82 MiB        30         2.83 MiB 100,28
-Raft 8940034c 11/07/2022 16:50:06 stopped        29         2.83 MiB        30         2.84 MiB 100,32
+Snapshot for Project Zomboid
+
+Number ShortId  DateTime              Tags    TotalFileBackup TotalFileSize
+------ -------  --------              ----    --------------- -------------
+     1 5ac74d19 5/6/2023 10:44:16 AM  stopped           20163 196.84 MiB
+     2 b57496b0 5/8/2023 10:59:39 AM  stopped           20711 205.93 MiB
+     3 5ad0f356 5/9/2023 2:56:06 PM   stopped           20998 210.37 MiB
+     4 3a7ebf3f 5/10/2023 11:53:50 AM stopped           22689 226.07 MiB
+     5 6888df0a 5/10/2023 11:56:52 AM stopped           22689 226.07 MiB
+
+
+Action on snapshot
+What would like to do with snapshots?
+[C] Clean  [D] Delete  [Q] Quit  [?] Help (default is "C"):
 ```
+
+After this list, you can choose to clean snapshots (call `Clean-Restic.ps1` for you after two questions).
+**You have the option to delete snapshots, but this not completely implemented right now!**
 
 #### Get-ResticGameSnapshots - Prerequisites
 
@@ -178,11 +175,13 @@ Refer to [Clean-Restic - How to use](#clean-restic---how-to-use)
   `.\Get-ResticGameSnapshots.ps1 | Format-Table -Autosize`
   ![Weed Shop 3](https://i.imgur.com/02drKGN.png)
 2. Example for *V Rising* [^4] [^5]
-  `.\Get-ResticGameSnapshots.ps1 -Game "V Rising" | Format-Table -Autosize`
-  ![V Rising](https://i.imgur.com/62hkYed.png)
+  `.\Get-ResticGameSnapshots.ps1 -Game "V Rising"`
+  ![V Rising](https://i.imgur.com/INR0cdGl.png)
 3. Shows the 10 games with the most snapshots [^6]
   `.\Get-ResticGameSnapshots.ps1 -CountOnly | Sort-Object Snapshots | Select-Object -Last 10`
   ![Count](https://i.imgur.com/mW6IQcK.png)
+4. Complete demo of getting snapshots and cleaning them for *Hogwarts Legacy*
+  [FR](https://github.com/Chucky2401/Restic-Scripts/blob/main/img/FR/Demo_Get/Nettoyer_depuis_Get.gif) / [EN](https://github.com/Chucky2401/Restic-Scripts/blob/main/img/FR/Demo_Get/Clean_from_get.gif)
 
 [^1]: Settings creation in action: [FR](https://github.com/Chucky2401/Restic-Scripts/blob/main/img/FR/Demo_Settings.gif) / [EN](https://github.com/Chucky2401/Restic-Scripts/blob/main/img/EN/Demo_Settings.gif)
 [^2]: Cleaning snapshots with default parameter in action: [FR](https://github.com/Chucky2401/Restic-Scripts/blob/main/img/FR/Demo_Clean/Défaut.gif) / [EN](https://github.com/Chucky2401/Restic-Scripts/blob/main/img/EN/Demo_Clean/Default.gif)
