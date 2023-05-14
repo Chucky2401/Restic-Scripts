@@ -1,5 +1,22 @@
 # Changelog
 
+## 2023.05.15 - v3.0-Beta.1
+
+### New
+
+- (Get-ResticSnapshots): after the list of snapshots appear, you can now choose to run the clean step. The script will ask you to choose filter, or not, and the number of snapshots to keep. After this step, you will be back to choose to clean, or you can quit.
+
+### Change
+
+- (Clean-Restic): you can now pass multiple tag to the `-TagFilter` parameter. Example: if you yse `-TagFilter "gameplay", "manual"` the snapshots that have the tag **gameplay** or **manual** will be deleted.
+
+### Changelog
+
+*Only relevant commit*
+
+- *df3c662* - feat(Clean-Restic): can use multiple different filters!
+- *681d4a1* - feat: add possibility to clean snapshots from Get-ResticGameSnapshots!
+
 ## 2023.05.11 - v2.1
 
 ### New
