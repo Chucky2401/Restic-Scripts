@@ -646,11 +646,11 @@ do {
 
             
             If ($null -ne $filters) {
-                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -TagFilter $filters -SnapshotToKeep $snapshotsToKeep -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
+                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -TagFilter $filters -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
             }
 
             If ($null -eq $filters) {
-                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -SnapshotToKeep $snapshotsToKeep -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
+                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
             }
 
             If ($null -ne $snapshotsRemoved) {
