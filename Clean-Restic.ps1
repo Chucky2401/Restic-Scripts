@@ -38,20 +38,20 @@
 
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
 Param (
-    [Parameter(Mandatory = $true, ValueFromPipeline)]
+    [Parameter(Mandatory = $True, ValueFromPipeline)]
     [ValidateNotNullOrEmpty()]
     [Alias("g")]
     [string[]]$Game,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $False)]
     [Alias("f")]
     [string]$TagFilter = "",
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $False)]
     [Alias("stk")]
     [int]$SnapshotToKeep,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $False)]
     [Alias("nd")]
     [Switch]$NoDelete,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $False)]
     [Alias("ns")]
     [Switch]$NoStats
 )
@@ -80,24 +80,10 @@ BEGIN {
 
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-    # Settings
-    #If (-not (Test-Path ".\conf\settings.json")) {
-    #    Write-Warning $Message.NoSetFile
-    #    Write-Host $Message.PleaseAnswer
-    #    
-    #    New-Settings -RootPath $PSScriptRoot
-    #}
-    
-    #$oSettings = Get-Settings -File ".\conf\settings.json"
-
     ## Default settings
     If ($PSBoundParameters.ContainsKey('SnapshotToKeep') -eq $False) {
         $SnapshotToKeep = $global:settings.Snapshots.ToKeep
     }
-
-    # Restic Info
-    ## Envrinoment variable
-    #Set-Environment -Settings $oSettings
 
     ## Common restic to use
     $sFilter = "--tag `"$Game`""
@@ -290,6 +276,5 @@ END {
     Write-CenterText "*********************************" $sLogFile
 
     # Cleaning
-    Remove-Environment
     Remove-Module Tjvs.*
 }
