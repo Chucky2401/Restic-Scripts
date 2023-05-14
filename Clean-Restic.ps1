@@ -120,13 +120,15 @@ BEGIN {
     $aSnapshotRemoved      = @()
     $aSnapshotStillPresent = @()
 
-    Write-CenterText "*********************************" $sLogFile
-    Write-CenterText "*                               *" $sLogFile
-    Write-CenterText "*      Restic clean backup      *" $sLogFile
-    Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-    Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
-    Write-CenterText "*                               *" $sLogFile
-    Write-CenterText "*********************************" $sLogFile
+    If (-not $FromGet){
+        Write-CenterText "*********************************" $sLogFile
+        Write-CenterText "*                               *" $sLogFile
+        Write-CenterText "*      Restic clean backup      *" $sLogFile
+        Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
+        Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
+        Write-CenterText "*                               *" $sLogFile
+        Write-CenterText "*********************************" $sLogFile
+    }
     ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
     If (-not $global:settings.Global.Stats) {
@@ -135,10 +137,10 @@ BEGIN {
         $NoStats = $True
     }
 
-    ## Demo purpose only!
+    ##! Demo purpose only!
     #$NoStats = $True
     #$NoDelete = $True
-    ## Demo purpose only!
+    ##! Demo purpose only!
 }
 
 PROCESS {
@@ -200,8 +202,11 @@ PROCESS {
                     }
                 }
             } Else {
-                ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                #ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                ##! Demo purpose only!
+                #$aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", "OK!") }
                 #Start-Sleep -Seconds 2
+                ##! Demo purpose only!
                 $aSnapshotRemoved += $sSnapshotId
             }
             $cntDetails++
@@ -216,7 +221,9 @@ PROCESS {
             }
         } Else {
             ShowLogMessage -type "OTHER" -message $Message.Dbg_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
+            ##! Demo purpose only!
             #ShowLogMessage -type "SUCCESS" -message $Message.Suc_SumDel -variable $($aSnapshotRemoved.Count) -sLogFile ([ref]$sLogFile)
+            ##! Demo purpose only!
         }
     
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
@@ -277,16 +284,19 @@ END {
         ShowLogMessage -type "OTHER" -message $Message.Oth_BfrRatio -variable $($oDataBefore.Ratio) -sLogFile ([ref]$sLogFile)
     }
 
-    Write-CenterText "*********************************" $sLogFile
-    Write-CenterText "*                               *" $sLogFile
-    Write-CenterText "*      Restic clean backup      *" $sLogFile
-    Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-    Write-CenterText "*           End $(Get-Date -Format 'HH:mm')           *" $sLogFile
-    Write-CenterText "*                               *" $sLogFile
-    Write-CenterText "*********************************" $sLogFile
-
-    # Cleaning
     If (-not $FromGet) {
+        Write-CenterText "*********************************" $sLogFile
+        Write-CenterText "*                               *" $sLogFile
+        Write-CenterText "*      Restic clean backup      *" $sLogFile
+        Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
+        Write-CenterText "*           End $(Get-Date -Format 'HH:mm')           *" $sLogFile
+        Write-CenterText "*                               *" $sLogFile
+        Write-CenterText "*********************************" $sLogFile
+
         Remove-Module Tjvs.*
+    }
+
+    If ($FromGet) {
+        Return $aSnapshotRemoved
     }
 }
