@@ -92,7 +92,7 @@ BEGIN {
 
     ## Common restic to use
     $sFilter          = "--tag `"$Game`""
-    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join(" or ", $TagFilter))
+    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join($Message.Oth_Or, $TagFilter))
 
     #If ($TagFilter -ne "") {
     If (-not [String]::IsNullOrEmpty($TagFilter)) {
