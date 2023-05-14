@@ -488,19 +488,6 @@ function Get-SnapshotDetails {
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-# Settings
-#If (-not (Test-Path ".\conf\settings.json")) {
-#    Write-Warning "No settings file!"
-#    Write-Host "Please answer the question below!`r`n"
-#    
-#    New-Settings -RootPath $PSScriptRoot
-#}
-#$oSettings = Get-Settings -File ".\conf\settings.json"
-
-# Restic Info
-## Envrinoment variable
-#Set-Environment -Settings $oSettings
-
 # Info
 ## Hashtable
 $htGameSnapshotsCount = [ordered]@{}
@@ -609,17 +596,6 @@ Write-Progress -Activity $Message.Prg_Complete -Completed
 ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
 ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $($sChooseGame) -sLogFile ([ref]$sLogFile)
-
-#$oChooseSnapshot = $aSnapshotListDetails[(Read-SnapshotChoice -Choices $aSnapshotListDetails -Title "Choose a snpashot" -Message "Which Snapshot ?")]
-#$oChooseSnapshot | Format-Table -AutoSize
-
-#Write-CenterText "*********************************" $sLogFile
-#Write-CenterText "*                               *" $sLogFile
-#Write-CenterText "*      List Game Snapshot       *" $sLogFile
-#Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-#Write-CenterText "*           End $(Get-Date -Format 'HH:mm')           *" $sLogFile
-#Write-CenterText "*                               *" $sLogFile
-#Write-CenterText "*********************************" $sLogFile
 
 $aSnapshotListDetails
 
