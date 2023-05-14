@@ -600,8 +600,8 @@ Write-Progress -Activity $Message.Prg_Complete -Completed
 
 ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
 
-ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $($sChooseGame) -sLogFile ([ref]$sLogFile)
+$snapshotsChoose = $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}} | Out-GridView -OutputMode Multiple -Title $($Message.Oth_ListSnaps -f $sChooseGame)
 
-$aSnapshotListDetails
+#$snapshotsChoose
 
 Remove-Module Tjvs.*
