@@ -46,7 +46,7 @@ Param (
     [string[]]$Game,
     [Parameter(Mandatory = $False)]
     [Alias("f")]
-    [string[]]$TagFilter = "",
+    [string[]]$IncludeTag = "",
     [Parameter(Mandatory = $False)]
     [Alias("stk")]
     [int]$SnapshotToKeep,
@@ -91,17 +91,17 @@ BEGIN {
     }
 
     ## Common restic to use
-    $sFilter          = "--tag `"$Game`""
-    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join($Message.Oth_Or, $TagFilter))
+    $includeFilter    = "--tag `"$Game`""
+    $messageTagFilter = ""
 
-    #If ($TagFilter -ne "") {
-    If (-not [String]::IsNullOrEmpty($TagFilter)) {
-        $sFilter = ""
-        $TagFilter | ForEach-Object {
-            $sFilter += " --tag `"$Game,$($PSItem)`""
+    If (-not [String]::IsNullOrEmpty($IncludeTag)) {
+        $includeFilter = ""
+        $IncludeTag | ForEach-Object {
+            $includeFilter += " --tag `"$Game,$($PSItem)`""
         }
+        $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join($Message.Oth_Or, $IncludeTag))
     }
-    $sFilter = $sFilter.Trim()
+    $includeFilter = $includeFilter.Trim()
     
     # Logs
     $sLogPath = "$($PSScriptRoot)\logs"
@@ -150,7 +150,7 @@ PROCESS {
 
     foreach ($sGame in $Game) {
         ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sGame) -sLogFile ([ref]$sLogFile)
-        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($sFilter) --json"
+        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) --json"
         
         If ($oResticProcess.ExitCode -eq 0) {
             ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetSnaps -sLogFile ([ref]$sLogFile)
