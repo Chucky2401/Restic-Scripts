@@ -608,6 +608,8 @@ $oSnapshotsList | ForEach-Object {
 }
 Write-Progress -Activity $Message.Prg_Complete -Completed
 
+$listTags = ($aSnapshotListDetails | Select-Object -ExpandProperty Tags -Unique)
+
 do {
     Clear-Host
     ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $sChooseGame -sLogFile ([ref]$sLogFile)
@@ -620,7 +622,7 @@ do {
 
     switch ($result) {
         0 {            
-            $filters = $global:settings.Filters | Out-GridView -OutputMode Multiple -Title $Message.View_ChooseFilters
+            $includeFilters = $listTags | Out-GridView -OutputMode Multiple -Title $Message.View_ChooseFilters
             
             $bFirstLoop = $True
             do {
@@ -644,14 +646,7 @@ do {
             } While ($selection -lt 0)
             $snapshotsToKeep = $selection
 
-            
-            If ($null -ne $filters) {
-                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -TagFilter $filters -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
-            }
-
-            If ($null -eq $filters) {
-                $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
-            }
+            $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -TagFilter $includeFilters -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
 
             If ($null -ne $snapshotsRemoved) {
                 $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
