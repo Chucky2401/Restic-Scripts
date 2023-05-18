@@ -5,8 +5,10 @@
         This script permit to remove restic snapshots for a game and to keep a certain amout of snapshots (by default: 5)
     .PARAMETER Game
         Game name of snapshots to delete
-    .PARAMETER TagFilter
+    .PARAMETER IncludeTag
         A filter on the snapshots to retrieve for the game
+    .PARAMETER ExcludeTag
+        Tag to ignore
     .PARAMETER SnapshotToKeep
         Number of snapshots to keep (by default: 5)
     .PARAMETER NoDelete
@@ -45,10 +47,10 @@ Param (
     [Alias("g")]
     [string[]]$Game,
     [Parameter(Mandatory = $False)]
-    [Alias("f")]
+    [Alias("it")]
     [string[]]$IncludeTag = "",
     [Parameter(Mandatory = $False)]
-    [Alias("f")]
+    [Alias("et")]
     [string[]]$ExcludeTag = "",
     [Parameter(Mandatory = $False)]
     [Alias("stk")]
@@ -105,7 +107,7 @@ BEGIN {
         $IncludeTag | ForEach-Object {
             $includeFilter += " --tag `"$Game,$($PSItem)`""
         }
-        
+
         $joinedTag += "Include: $([String]::Join($Message.Oth_Or, $IncludeTag))"
     }
     $includeFilter = $includeFilter.Trim()
