@@ -32,6 +32,8 @@
     Warn_SumDel = "{0} snapshots ont été supprimé, mais {1} est/sont encore présent(s)." # 0: Number of snapshots removed / 1: Number of snapshots still present
 
     ## Error
+    ### Filter
+    Err_ShaFilt = "Vous avez les tags: {0}, dans les deux filters. Vous ne pouvez pas faire ça. Corriger et relancer." # 0: shared filters
     ### Get
     Err_GetSnaps = "Snapshots non récupérés ! (Code sortie: {0})" # 0: Restic exit code
     ### Delete

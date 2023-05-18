@@ -48,6 +48,9 @@ Param (
     [Alias("f")]
     [string[]]$IncludeTag = "",
     [Parameter(Mandatory = $False)]
+    [Alias("f")]
+    [string[]]$ExcludeTag = "",
+    [Parameter(Mandatory = $False)]
     [Alias("stk")]
     [int]$SnapshotToKeep,
     [Parameter(Mandatory = $False)]
@@ -92,6 +95,9 @@ BEGIN {
 
     ## Common restic to use
     $includeFilter    = "--tag `"$Game`""
+    $excludeFilter    = ""
+    $sharedFilter     = @()
+    $joinedTag        = ""
     $messageTagFilter = ""
 
     If (-not [String]::IsNullOrEmpty($IncludeTag)) {
@@ -99,9 +105,31 @@ BEGIN {
         $IncludeTag | ForEach-Object {
             $includeFilter += " --tag `"$Game,$($PSItem)`""
         }
-        $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join($Message.Oth_Or, $IncludeTag))
+        
+        $joinedTag += "Include: $([String]::Join($Message.Oth_Or, $IncludeTag))"
     }
     $includeFilter = $includeFilter.Trim()
+
+    If (-not [String]::IsNullOrEmpty($ExcludeTag)) {
+        If (-not [String]::IsNullOrEmpty($IncludeTag)) {
+            $sharedFilter = (Compare-Object $IncludeTag $ExcludeTag -IncludeEqual -ExcludeDifferent).InputObject
+        }
+
+        If ($sharedFilter.Count -ge 1) {
+            Write-Message -Type "ERROR" -Message $Message.Err_ShaFilt -Variables ([String]::Join(" ; ", $sharedFilter)) -LogFile ([ref]$sLogFile)
+            Write-Message -Type "OTHER"
+
+            exit 0
+        }
+
+        $ExcludeTag | ForEach-Object {
+            $excludeFilter += " --keep-tag `"$($PSItem)`""
+        }
+
+        $joinedTag += "Exclude: $([String]::Join($Message.Oth_Or, $ExcludeTag))"
+    }
+    $excludeFilter    = $excludeFilter.Trim()
+    $messageTagFilter = $Message.Oth_MessageFilter -f ([String]::Join(" ; ", $joinedTag))
     
     # Logs
     $sLogPath = "$($PSScriptRoot)\logs"
@@ -150,7 +178,7 @@ PROCESS {
 
     foreach ($sGame in $Game) {
         ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sGame) -sLogFile ([ref]$sLogFile)
-        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) --json"
+        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) $($excludeFilter) --json"
         
         If ($oResticProcess.ExitCode -eq 0) {
             ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetSnaps -sLogFile ([ref]$sLogFile)

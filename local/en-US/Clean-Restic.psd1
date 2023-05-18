@@ -32,6 +32,8 @@
     Warn_SumDel = "{0} snapshots has been removed, but {1} are still present" # 0: Number of snapshots removed / 1: Number of snapshots still present
 
     ## Error
+    ### Filter
+    Err_ShaFilt = "You have: {0}, in include and exclude filter. You can't do that. Please fix and re-run." # 0: shared filters
     ### Get
     Err_GetSnaps = "Not able to get them! (Exit code: {0})" # 0: Restic exit code
     ### Delete
