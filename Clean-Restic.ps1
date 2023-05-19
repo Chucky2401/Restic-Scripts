@@ -28,12 +28,12 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 3.0-Beta.1
+        Version        : 3.0-Beta.2
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
         Date modified  : 14/05/2023
-        Change         : Feature if call from Get and enhancement for filter
+        Change         : Exclude parameter fix
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
@@ -97,9 +97,8 @@ BEGIN {
 
     ## Common restic to use
     $includeFilter    = "--tag `"$Game`""
-    $excludeFilter    = ""
     $sharedFilter     = @()
-    $joinedTag        = ""
+    $joinedTag        = @()
     $messageTagFilter = ""
 
     If (-not [String]::IsNullOrEmpty($IncludeTag)) {
@@ -124,14 +123,9 @@ BEGIN {
             exit 0
         }
 
-        $ExcludeTag | ForEach-Object {
-            $excludeFilter += " --keep-tag `"$($PSItem)`""
-        }
-
         $joinedTag += "Exclude: $([String]::Join($Message.Oth_Or, $ExcludeTag))"
     }
-    $excludeFilter    = $excludeFilter.Trim()
-    $messageTagFilter = $Message.Oth_MessageFilter -f ([String]::Join(" ; ", $joinedTag))
+    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join(" ; ", $joinedTag))
     
     # Logs
     $sLogPath = "$($PSScriptRoot)\logs"
@@ -168,7 +162,7 @@ BEGIN {
     }
 
     ##! Demo purpose only!
-    #$NoStats = $True
+    #$NoStats  = $True
     #$NoDelete = $True
     ##! Demo purpose only!
 }
@@ -180,7 +174,7 @@ PROCESS {
 
     foreach ($sGame in $Game) {
         ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sGame) -sLogFile ([ref]$sLogFile)
-        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) $($excludeFilter) --json"
+        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) --json"
         
         If ($oResticProcess.ExitCode -eq 0) {
             ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetSnaps -sLogFile ([ref]$sLogFile)
@@ -199,7 +193,7 @@ PROCESS {
         }
 
         $numberSnapshotsTotal = $jsResultRestic.Count
-        $numberSnapshotsToRemove = ($jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep).Count
+        $numberSnapshotsToRemove = ($jsResultRestic | Where-Object { $PSItem.tags -notcontains $ExcludeTag } | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep).Count
         
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
         
@@ -208,7 +202,7 @@ PROCESS {
         } Else {
             ShowLogMessage -type "INFO" -message $Message.Inf_DelSnaps -variable $numberSnapshotsToRemove,$numberSnapshotsTotal,$($sGame),$messageTagFilter -sLogFile ([ref]$sLogFile)
         }
-        $jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
+        $jsResultRestic | Where-Object { $PSItem.tags -notcontains $ExcludeTag } | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
             $iPercentComplete = [Math]::Round(($cntDetails/$numberSnapshotsToRemove)*100,2)
             $sSnapshotId = $PSItem.short_id
 
@@ -232,12 +226,12 @@ PROCESS {
                     }
                 }
             } Else {
-                #ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                $aSnapshotRemoved += $sSnapshotId
                 ##! Demo purpose only!
                 #$aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", "OK!") }
                 #Start-Sleep -Seconds 2
                 ##! Demo purpose only!
-                $aSnapshotRemoved += $sSnapshotId
             }
             $cntDetails++
         }
