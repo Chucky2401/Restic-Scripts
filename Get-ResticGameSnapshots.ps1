@@ -14,12 +14,12 @@
         .\Get-ResticGameSnapshots.ps1
     .NOTES
         Name           : Get-ResticGameSapshots
-        Version        : 3.0-Beta.1
+        Version        : 3.0-Beta.2
         Created by     : Chucky2401
         Date Created   : 25/07/2022
         Modify by      : Chucky2401
-        Date modified  : 14/05/2023
-        Change         : Action on snapshots!
+        Date modified  : 19/05/2023
+        Change         : Exclude parameter
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
@@ -608,7 +608,8 @@ $oSnapshotsList | ForEach-Object {
 }
 Write-Progress -Activity $Message.Prg_Complete -Completed
 
-$listTags = ($aSnapshotListDetails | Select-Object -ExpandProperty Tags -Unique)
+$listTags               = ($aSnapshotListDetails | Select-Object -ExpandProperty Tags -Unique)
+$availableExcludeFilter = $listTags
 
 do {
     Clear-Host
@@ -622,7 +623,15 @@ do {
 
     switch ($result) {
         0 {            
-            $includeFilters = $listTags | Out-GridView -OutputMode Multiple -Title $Message.View_ChooseFilters
+            $includeFilters = $listTags | Out-GridView -OutputMode Multiple -Title ($Message.View_ChooseFilters -f "include")
+
+            If ($includeFilters.Count -ge 1) {
+                $availableExcludeFilter = $listTags | Where-Object { $PSItem -notmatch [String]::Join("|", $includeFilters) }
+            }
+
+            If ($availableExcludeFilter.Count -ge 1) {
+                $excludeFilters = $availableExcludeFilter | Out-GridView -OutputMode Multiple -Title ($Message.View_ChooseFilters -f "exclude")
+            }
             
             $bFirstLoop = $True
             do {
@@ -646,7 +655,7 @@ do {
             } While ($selection -lt 0)
             $snapshotsToKeep = $selection
 
-            $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -TagFilter $includeFilters -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
+            $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -IncludeTag $includeFilters -ExcludeTag $excludeFilters -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
 
             If ($null -ne $snapshotsRemoved) {
                 $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
