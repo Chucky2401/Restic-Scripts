@@ -2,8 +2,6 @@
     # English message for Clean-Restic.ps1
 
     ## Settings
-    NoSetFile         = "No settings file!"
-    PleaseAnswer      = "Please answer the question below!`r`n"
     Warn_StatsDisable = "Stats are globally disabled!"
 
     ## Info

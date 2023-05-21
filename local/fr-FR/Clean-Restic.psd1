@@ -1,9 +1,7 @@
 @{
-    # French message
+    # Message en français pour Clean-Restic.ps1
 
     ## Settings
-    NoSetFile         = "Fichiers de paramètres introuvable!"
-    PleaseAnswer      = "Veuillez répondre aux questions suivantes`r`n"
     Warn_StatsDisable = "Stats globallement désactivé"
 
     ## Info
