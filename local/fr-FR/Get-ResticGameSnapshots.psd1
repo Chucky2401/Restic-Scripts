@@ -45,7 +45,7 @@
     Men_QuitDescription   = "Quitter"
 
     ## View
-    View_ChooseFilters = "Choisir le(s) filtre(s). Fermer ou bouton Cancel pour ne pas ajouter de filtre."
+    View_ChooseFilters = "Choisir le(s) filtre(s) {0}. Fermer ou bouton Cancel pour ne pas ajouter de filtre."
 
     ## Progress
     Prg_Activity = "Récupération des détails des snapshots pour {0} | {1}/{2} ({3}%)..." #0: Game chose / 1: Current / 2: Total snapshot / 3: Percent

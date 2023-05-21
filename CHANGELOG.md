@@ -1,5 +1,30 @@
 # Changelog
 
+## 2023.05.21 - v3.0-Beta.2
+
+### New
+
+- (Clean-Restic): Add parameter `-ExcludeTag`
+- (Get-ResticSnapshots): ability to choose tag to exclude before calling the script to clean
+- (Get-ResticSnapshots): add parameter `-Listing` which show snapshots list and quit
+- (Remove-ResticSnapshots): let you remove one or some specific snapshots!
+- (Get-ResticSnapshots): let you call `Remove-ResticSnapshots` after you choose the snapshots to remove
+
+### Change
+
+- (Clean-Restic): rename parameter `-TagFilter` to `-IncludeTag`
+
+### Changelog
+
+*Only relevant commit*
+
+- *ae30c7c* - feat(Clean-Restic): rename parameter -TagFilter to -IncludeTag.
+- *5e86325* - feat: implement new parameter -ExcludeTag to Clean-Restic
+- *eeab12e* - feat(Get-ResticGameSnapshots): add possibility to choose exclude tag filter
+- *322ecfc* - feat(Get-ResticGameSnapshots): add -Listing parameter which show snapshots list and quit.
+- *bef2b18* - feat: script to remove specific Restic snapshots!
+- *f306443* - feat(Get-ResticGameSnapshots): implement Remove in the menu!
+
 ## 2023.05.15 - v3.0-Beta.1
 
 ### New

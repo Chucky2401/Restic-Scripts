@@ -5,7 +5,7 @@ function Test-SettingsFile {
 
     $scriptRoot = $PSScriptRoot -replace "\\inc\\modules\\Tjvs.Settings", ""
 
-    Import-LocalizedData -BindingVariable "Message" -BaseDirectory "$($scriptRoot)\local" -FileName "Clean-Restic.psd1"
+    Import-LocalizedData -BindingVariable "Message" -BaseDirectory "$($scriptRoot)\local" -FileName "Tjvs.Modules.psd1"
 
     If (-not (Test-Path ".\conf\settings.json")) {
         Write-Warning $Message.NoSetFile

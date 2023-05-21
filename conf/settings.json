@@ -14,10 +14,5 @@
     "Snapshots": {
         "__ToKeep": "Default value for number of snapshots to keep",
         "ToKeep": 5
-    },
-    "Filters": [
-        "gameplay",
-        "manual",
-        "stopped"
-    ]
+    }
 }
