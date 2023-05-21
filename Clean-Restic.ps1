@@ -5,8 +5,10 @@
         This script permit to remove restic snapshots for a game and to keep a certain amout of snapshots (by default: 5)
     .PARAMETER Game
         Game name of snapshots to delete
-    .PARAMETER TagFilter
+    .PARAMETER IncludeTag
         A filter on the snapshots to retrieve for the game
+    .PARAMETER ExcludeTag
+        Tag to ignore
     .PARAMETER SnapshotToKeep
         Number of snapshots to keep (by default: 5)
     .PARAMETER NoDelete
@@ -26,12 +28,12 @@
         Will simulate removing of V Rising snapshots
     .NOTES
         Name           : Clean-Restic
-        Version        : 3.0-Beta.1
+        Version        : 3.0-Beta.2
         Created by     : Chucky2401
         Date Created   : 30/06/2022
         Modify by      : Chucky2401
         Date modified  : 14/05/2023
-        Change         : Feature if call from Get and enhancement for filter
+        Change         : Exclude parameter fix
     .LINK
         https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
@@ -45,20 +47,26 @@ Param (
     [Alias("g")]
     [string[]]$Game,
     [Parameter(Mandatory = $False)]
-    [Alias("f")]
-    [string[]]$TagFilter = "",
+    [Alias("i")]
+    [string[]]$IncludeTag = "",
     [Parameter(Mandatory = $False)]
-    [Alias("stk")]
+    [Alias("e")]
+    [string[]]$ExcludeTag = "",
+    [Parameter(Mandatory = $False)]
+    [Alias("s")]
     [int]$SnapshotToKeep,
     [Parameter(Mandatory = $False)]
-    [Alias("nd")]
+    [Alias("n")]
     [Switch]$NoDelete,
     [Parameter(Mandatory = $False)]
-    [Alias("ns")]
+    [Alias("t")]
     [Switch]$NoStats,
     [Parameter(Mandatory = $False)]
-    [Alias("fg")]
-    [Switch]$FromGet
+    [Alias("r")]
+    [Switch]$FromGet,
+    [Parameter(Mandatory = $False)]
+    [Alias("l")]
+    [String]$LogFile = $null
 )
 
 BEGIN {
@@ -72,7 +80,7 @@ BEGIN {
     }
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
-    $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
+    $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
 
     Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
 
@@ -91,25 +99,47 @@ BEGIN {
     }
 
     ## Common restic to use
-    $sFilter          = "--tag `"$Game`""
-    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join($Message.Oth_Or, $TagFilter))
+    $includeFilter    = "--tag `"$Game`""
+    $sharedFilter     = @()
+    $joinedTag        = @()
+    $messageTagFilter = ""
 
-    #If ($TagFilter -ne "") {
-    If (-not [String]::IsNullOrEmpty($TagFilter)) {
-        $sFilter = ""
-        $TagFilter | ForEach-Object {
-            $sFilter += " --tag `"$Game,$($PSItem)`""
+    If (-not [String]::IsNullOrEmpty($IncludeTag)) {
+        $includeFilter = ""
+        $IncludeTag | ForEach-Object {
+            $includeFilter += " --tag `"$Game,$($PSItem)`""
         }
+
+        $joinedTag += "$($Message.Oth_Include): $([String]::Join($Message.Oth_Or, $IncludeTag))"
     }
-    $sFilter = $sFilter.Trim()
+    $includeFilter = $includeFilter.Trim()
+
+    If (-not [String]::IsNullOrEmpty($ExcludeTag)) {
+        If (-not [String]::IsNullOrEmpty($IncludeTag)) {
+            $sharedFilter = (Compare-Object $IncludeTag $ExcludeTag -IncludeEqual -ExcludeDifferent).InputObject
+        }
+
+        If ($sharedFilter.Count -ge 1) {
+            Write-Message -Type "ERROR" -Message $Message.Err_ShaFilt -Variables ([String]::Join(" ; ", $sharedFilter)) -LogFile ([ref]$sLogFile)
+            Write-Message -Type "OTHER"
+
+            exit 0
+        }
+
+        $joinedTag += "$($Message.Oth_Exclude): $([String]::Join($Message.Oth_Or, $ExcludeTag))"
+    }
+    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join(" ; ", $joinedTag))
     
     # Logs
-    $sLogPath = "$($PSScriptRoot)\logs"
-    $sLogName = "Restic-Clean_old_backup-$(Get-Date -Format 'yyyy.MM.dd')-$(Get-Date -Format 'HH.mm').log"
-    If ($PSBoundParameters['Debug']) {
-        $sLogName = "DEBUG-$($sLogName)"
+    $sLogFile = $LogFile
+    If ([String]::IsNullOrEmpty($LogFile)) {
+        $sLogPath = "$($PSScriptRoot)\logs"
+        $sLogName = "Restic-Clean_old_backup-$(Get-Date -Format 'yyyy.MM.dd')-$(Get-Date -Format 'HH.mm').log"
+        If ($PSBoundParameters['Debug']) {
+            $sLogName = "DEBUG-$($sLogName)"
+        }
+        $sLogFile = "$($sLogPath)\$($sLogName)"
     }
-    $sLogFile = "$($sLogPath)\$($sLogName)"
 
     # Init Var
     $oDataBefore = $null
@@ -138,7 +168,7 @@ BEGIN {
     }
 
     ##! Demo purpose only!
-    #$NoStats = $True
+    #$NoStats  = $True
     #$NoDelete = $True
     ##! Demo purpose only!
 }
@@ -150,7 +180,7 @@ PROCESS {
 
     foreach ($sGame in $Game) {
         ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sGame) -sLogFile ([ref]$sLogFile)
-        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($sFilter) --json"
+        $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) --json"
         
         If ($oResticProcess.ExitCode -eq 0) {
             ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetSnaps -sLogFile ([ref]$sLogFile)
@@ -163,13 +193,12 @@ PROCESS {
                     ShowLogMessage -type "OTHER" -message "`t$($PSItem)" -sLogFile ([ref]$sLogFile)
                 }
             }
-        
-            PAUSE
+            
             exit 1
         }
 
         $numberSnapshotsTotal = $jsResultRestic.Count
-        $numberSnapshotsToRemove = ($jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep).Count
+        $numberSnapshotsToRemove = ($jsResultRestic | Where-Object { $PSItem.tags -notcontains $ExcludeTag } | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep).Count
         
         ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
         
@@ -178,7 +207,7 @@ PROCESS {
         } Else {
             ShowLogMessage -type "INFO" -message $Message.Inf_DelSnaps -variable $numberSnapshotsToRemove,$numberSnapshotsTotal,$($sGame),$messageTagFilter -sLogFile ([ref]$sLogFile)
         }
-        $jsResultRestic | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
+        $jsResultRestic | Where-Object { $PSItem.tags -notcontains $ExcludeTag } | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
             $iPercentComplete = [Math]::Round(($cntDetails/$numberSnapshotsToRemove)*100,2)
             $sSnapshotId = $PSItem.short_id
 
@@ -202,12 +231,12 @@ PROCESS {
                     }
                 }
             } Else {
-                #ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                ShowLogMessage -type "OTHER" -message $Message.Dbg_DelSnaps -variable $($sSnapshotId) -sLogFile ([ref]$sLogFile)
+                $aSnapshotRemoved += $sSnapshotId
                 ##! Demo purpose only!
                 #$aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", "OK!") }
                 #Start-Sleep -Seconds 2
                 ##! Demo purpose only!
-                $aSnapshotRemoved += $sSnapshotId
             }
             $cntDetails++
         }

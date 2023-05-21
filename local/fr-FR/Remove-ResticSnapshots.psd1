@@ -1,26 +1,18 @@
 @{
-    # Message en français pour Clean-Restic.ps1
+    # Message en Français pour Remove-ResticSnapshots.ps1
 
     ## Settings
     Warn_StatsDisable = "Stats globallement désactivé"
 
     ## Info
-    ### Get
-    Inf_GetSnaps = "Récupère les snapshots de {0} depuis Restic en JSON..." # 0: Game
-    ### Delete
-    Inf_DelSnaps    = "Supprime {0}/{1} snapshots pour {2}{3}..." # 0: Number snapshots to remove / 1: Snapshots total / 2: Game / 3: Filter (optional)
-    Inf_DelSnapsAll = "Supprime tous les snapshots pour {0}{1}..." # 0: Game / 1: Filter (optional)
     ### Prune
     Inf_Prune = "Nettoyage (prune) dépôt..."
     ### Stats
-    Inf_StatsBoth   = "Statistiques :"
+    Inf_StatsBoth   = "Statistiques:"
     Inf_StatsBefore = "Statistiques actuelles du dépôt Restic :"
 
     ## Success
-    ### Get
-    Suc_GetSnaps = "Snapshots récupérés !"
     ### Delete
-    Suc_DelSnaps = "Snapshot n°{0} supprimé avec succès !" # 0: Snapshot ID
     Suc_SumDel   = "Les {0} snapshots ont été supprimé avec succès !" # 0: Number of snapshots removed
     ### Prune
     Suc_Prune = "Le dépôt Restic a été nettoyé !"
@@ -30,12 +22,8 @@
     Warn_SumDel = "{0} snapshots ont été supprimé, mais {1} est/sont encore présent(s)." # 0: Number of snapshots removed / 1: Number of snapshots still present
 
     ## Error
-    ### Filter
-    Err_ShaFilt = "Vous avez les tags: {0}, dans les deux filters. Vous ne pouvez pas faire ça. Corriger et relancer." # 0: shared filters
-    ### Get
-    Err_GetSnaps = "Snapshots non récupérés ! (Code sortie: {0})" # 0: Restic exit code
     ### Delete
-    Err_DelSnaps = "Snapshot n°{0} n'a pas été supprimé avec succès ! (Code sortie: {1})" # 0: Snapshot ID / # 1: Restic exit code
+    Err_RemSnap = "Snapshot n°{0} n'a pas été supprimé avec succès ! (Code sortie: {1})" # 0: Snapshot ID / # 1: Restic exit code
     ### Prune
     Err_Prune = "Le dépôt Restic n'a pas été nettoyé ! (Code sortie: {0})" # 0: Restic exit code
 
@@ -48,13 +36,11 @@
     Dbg_PruneDetail = "Détail nettoyage :"
 
     ## Progress
-    Prg_Activity = "Suppression des snapshots pour {0} | {1}/{2} ({3}%)..." #0: Game chose / 1: Current / 2: Total snapshot / 3: Percent
+    Prg_Activity = "Suppression des snapshots | {0}/{1} ({2}%)..." # 0: Current / 1: Total snapshot / 2: Percent
     Prg_Status   = "Suppression snapshot n°{0}..." #0: Snapshot ID
     Prg_Complete = "Fin de la suppression des snapshots !"
 
     ## Other
-    ### Filter
-    Oth_MessageFilter = " (Filtre: {0})" # 0: Tag filter
     ### Stats
     #### Before only
     Oth_BfrSnapNbr  = "`tNombre snapshots:           {0}"      # 0: Snapshots number before
@@ -70,11 +56,4 @@
     Oth_BothBlob     = "`tTotal blobs:                {0} / {1}"      # 0: Total blob before / 1: Total blob after
     Oth_BothBlobSize = "`tTotal taille blobs:         {0} / {1}"      # 0: Blob size before / 1: Blob size after
     Oth_BothRatio    = "`tRatio:                      {0} % / {1} %"  # 0: Ratio before / 1: Ratio after
-    ### Misc
-    Oth_Or = " ou "
-    Oth_Include = "Inclus"
-    Oth_Exclude = "Exclus"
-
-    Msg1 = "Un message en français"
-    Msg2 = "Salut {0}!"
 }
