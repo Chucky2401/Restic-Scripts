@@ -1,5 +1,6 @@
 misc/
 logs/*
 doc/perso/
+CHANGELOG_Release_v3.0.md
 
 !/logs/.gitkeep
