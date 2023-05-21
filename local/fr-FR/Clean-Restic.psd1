@@ -74,6 +74,8 @@
     Oth_BothRatio    = "`tRatio:                      {0} % / {1} %"  # 0: Ratio before / 1: Ratio after
     ### Misc
     Oth_Or = " ou "
+    Oth_Include = "Inclus"
+    Oth_Exclude = "Exclus"
 
     Msg1 = "Un message en français"
     Msg2 = "Salut {0}!"

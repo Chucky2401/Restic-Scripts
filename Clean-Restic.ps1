@@ -47,23 +47,26 @@ Param (
     [Alias("g")]
     [string[]]$Game,
     [Parameter(Mandatory = $False)]
-    [Alias("it")]
+    [Alias("i")]
     [string[]]$IncludeTag = "",
     [Parameter(Mandatory = $False)]
-    [Alias("et")]
+    [Alias("e")]
     [string[]]$ExcludeTag = "",
     [Parameter(Mandatory = $False)]
-    [Alias("stk")]
+    [Alias("s")]
     [int]$SnapshotToKeep,
     [Parameter(Mandatory = $False)]
-    [Alias("nd")]
+    [Alias("n")]
     [Switch]$NoDelete,
     [Parameter(Mandatory = $False)]
-    [Alias("ns")]
+    [Alias("t")]
     [Switch]$NoStats,
     [Parameter(Mandatory = $False)]
-    [Alias("fg")]
-    [Switch]$FromGet
+    [Alias("r")]
+    [Switch]$FromGet,
+    [Parameter(Mandatory = $False)]
+    [Alias("l")]
+    [String]$LogFile = $null
 )
 
 BEGIN {
@@ -77,7 +80,7 @@ BEGIN {
     }
 
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
-    $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)-5
+    $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
 
     Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
 
@@ -107,7 +110,7 @@ BEGIN {
             $includeFilter += " --tag `"$Game,$($PSItem)`""
         }
 
-        $joinedTag += "Include: $([String]::Join($Message.Oth_Or, $IncludeTag))"
+        $joinedTag += "$($Message.Oth_Include): $([String]::Join($Message.Oth_Or, $IncludeTag))"
     }
     $includeFilter = $includeFilter.Trim()
 
@@ -123,17 +126,20 @@ BEGIN {
             exit 0
         }
 
-        $joinedTag += "Exclude: $([String]::Join($Message.Oth_Or, $ExcludeTag))"
+        $joinedTag += "$($Message.Oth_Exclude): $([String]::Join($Message.Oth_Or, $ExcludeTag))"
     }
     $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join(" ; ", $joinedTag))
     
     # Logs
-    $sLogPath = "$($PSScriptRoot)\logs"
-    $sLogName = "Restic-Clean_old_backup-$(Get-Date -Format 'yyyy.MM.dd')-$(Get-Date -Format 'HH.mm').log"
-    If ($PSBoundParameters['Debug']) {
-        $sLogName = "DEBUG-$($sLogName)"
+    $sLogFile = $LogFile
+    If ([String]::IsNullOrEmpty($LogFile)) {
+        $sLogPath = "$($PSScriptRoot)\logs"
+        $sLogName = "Restic-Clean_old_backup-$(Get-Date -Format 'yyyy.MM.dd')-$(Get-Date -Format 'HH.mm').log"
+        If ($PSBoundParameters['Debug']) {
+            $sLogName = "DEBUG-$($sLogName)"
+        }
+        $sLogFile = "$($sLogPath)\$($sLogName)"
     }
-    $sLogFile = "$($sLogPath)\$($sLogName)"
 
     # Init Var
     $oDataBefore = $null

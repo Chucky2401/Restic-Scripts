@@ -73,7 +73,9 @@
     Oth_BothBlobSize = "`tTotal blobs size:   {0} / {1}"      # 0: Blob size before / 1: Blob size after
     Oth_BothRatio    = "`tRatio:              {0} % / {1} %"  # 0: Ratio before / 1: Ratio after
     ### Misc
-    Oth_Or = " or "
+    Oth_Or      = " or "
+    Oth_Include = "Include"
+    Oth_Exclude = "Exclude"
 
     ## Test
     Msg1 = "An english message"
