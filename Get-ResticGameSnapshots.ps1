@@ -698,6 +698,7 @@ Write-Progress -Activity $Message.Prg_Complete -Completed
 If ($Listing) {
     $aSnapshotListDetails
 
+    Remove-Module Tjvs.*
     exit 0
 }
 
@@ -720,21 +721,24 @@ do {
             Break
         }
         1 {
-            $snapshotsChoose = $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}} | Out-GridView -OutputMode Multiple -Title "Choose snapshots to delete"
-            ShowMessage -type "OTHER" -message "*** Snapshots would be deleted:"
-            $snapshotsChoose | Format-Table -AutoSize
-            Start-Sleep -Second 2
+            $snapshotsChoose = $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, $selectTotalFileSize, TotalBlob, $selectTotalBlobSize | Out-GridView -OutputMode Multiple -Title "Choose snapshots to delete"
+            
+            $snapshotsRemoved = .\Remove-ResticSnapshots.ps1 -ShortIds $snapshotsChoose.ShortId -FromGet -LogFile ([ref]$sLogFile) -Debug:($PSBoundParameters['Debug'] -eq $True)
 
-            $delete = [String]::Join("|", $snapshotsChoose.shortId)
-            $i = 1
-
-            $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
-            $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
-                $PSItem.Number = $i
-                $i++
+            If ($null -ne $snapshotsRemoved) {
+                $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
+                $i = 1
+        
+                $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
+                $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
+                    $PSItem.Number = $i
+                    $i++
+                }
+        
+                $aSnapshotListDetails = $newList
+        
+                #Return $aSnapshotListDetails
             }
-
-            $aSnapshotListDetails = $newList
             Break
         }
         2 {
