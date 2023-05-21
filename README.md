@@ -39,7 +39,7 @@ This script is on beta:
 
 I plan to do this script (not exhaustive):
 
-- Remove-ResticSnapshot
+- Remove-ResticSnapshots
 - Restore-ResticSnapshot
 
 ### Clean-Restic
@@ -48,7 +48,8 @@ This first script help me to clean my Restic repository for a specific game.
 It takes **at least the game name** as parameter. This parameter is used to filter **Restic snapshots by tag**.
 You have four more optional parameters:
 
-- **TagFilter** *(string[])*: Let you filter the snapshots of the game (eg: gameplay, manual). Take all snapshots that have tag1 or tag2, etc.
+- **IncludeTag** *(string[])*: Let you filter the snapshots of the game (eg: gameplay, manual). Take all snapshots that have tag1 or tag2, etc.
+- **ExcludeTag** *(string[])*: Exclude snapshots that have the tag tag1 or tag2, etc.
 - **SnapshotToKeep** *(int)*: by default set in the setting file. You can specify how many snapshots you want to keep.
 - **NoDelete** *(switch)*: if you want to run the script without delete any snapshots, like a dry run.
 - **NoStats** *(switch)*: if you don't want the script show you the stats about your repository
@@ -120,10 +121,14 @@ Will remove all the gameplay sansphots for Project Zomboid
 This script help me to list my Restic snapshot for a specific game. You don't have to know the tag in Restic, it will list you unique game tag at the beginning.
 You have two optional parameters:
 
-- **CountOnly** *(switch)*: only show a list of game with their number of snapshots.
-You can use PowerShell cmdlets (`Select-Object`, `Sort-Object`, `Format-*` and `Where-Object`) to filter precisely.
 - **Game** *(string)*: let you set the game that you want to show snapshots details.
 If you are wrong on the game name, an error message will appear and stop.
+- **Listing** *(switch)*: only list snapshots and quit
+You can use PowerShell cmdlets (`Select-Object`, `Sort-Object`, `Format-*` and `Where-Object`) to filter precisely.
+- **CountOnly** *(switch)*: only show a list of game with their number of snapshots.
+You can use PowerShell cmdlets (`Select-Object`, `Sort-Object`, `Format-*` and `Where-Object`) to filter precisely.
+
+**Use `Get-Member` to get available properties**
 
 You can use the common parameters of PowerShell (-Debug, -Verbose, etc.).
 
