@@ -696,9 +696,7 @@ $oSnapshotsList | ForEach-Object {
 Write-Progress -Activity $Message.Prg_Complete -Completed
 
 If ($Listing) {
-    ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $sChooseGame -sLogFile ([ref]$sLogFile)
-
-    $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, $selectTotalFileSize, TotalBlob, $selectTotalBlobSize | Format-Table -AutoSize
+    $aSnapshotListDetails
 
     exit 0
 }
