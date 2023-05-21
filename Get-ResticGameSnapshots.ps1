@@ -8,6 +8,8 @@
         Set directly the game name to filter without the script ask you the game.
     .PARAMETER CountOnly
         Show you the game list with the number of snapshots only
+    .PARAMETER Listing
+        Show snapshots list and stop
     .OUTPUTS
         Logs actions in case of crash
     .EXAMPLE
@@ -32,8 +34,15 @@ Using namespace System.Management.Automation.Host
 Param (
     # Parameter help description
     [Parameter(Mandatory = $False, ParameterSetName = "GameName")]
+    [ValidateNotNullOrEmpty()]
+    [Alias("g")]
     [String]$Game,
+    [Parameter(Mandatory = $False, ParameterSetName = "None")]
+    [Parameter(Mandatory = $False, ParameterSetName = "GameName")]
+    [Alias("l")]
+    [Switch]$Listing,
     [Parameter(Mandatory = $False, ParameterSetName = "Count")]
+    [Alias("c")]
     [Switch]$CountOnly
 )
 
@@ -403,9 +412,6 @@ function Get-SnapshotDetails {
             Modify by      : Chucky2401
             Date modified  : 27/07/2022
             Change         : Creation
-            Copy           : Copy-Item .\Script-Name.ps1 \Final\Path\Script-Name.ps1 -Force
-        .LINK
-            http://github.com/UserName/RepoName
     #>
     [CmdletBinding()]
     Param(
@@ -491,6 +497,83 @@ function Get-SnapshotDetails {
     return $oSnapshotDetails
 }
 
+function Invoke-Clean {
+    <#
+        .SYNOPSIS
+            Summary of the script
+        .DESCRIPTION
+            Script description
+        .PARAMETER param1
+            Parameter description
+        .INPUTS
+            Pipeline input data
+        .OUTPUTS
+            Output data
+        .EXAMPLE
+            .\template.ps1 param1
+        .NOTES
+            Name           : Script-Name
+            Version        : 1.0.0.1
+            Created by     : Chucky2401
+            Date Created   : 27/07/2022
+            Modify by      : Chucky2401
+            Date modified  : 27/07/2022
+            Change         : Creation
+    #>
+    [CmdletBinding()]
+    Param(
+    )
+
+    $includeFilters = $listTags | Out-GridView -OutputMode Multiple -Title ($Message.View_ChooseFilters -f "include")
+
+    If ($includeFilters.Count -ge 1) {
+        $availableExcludeFilter = $listTags | Where-Object { $PSItem -notmatch [String]::Join("|", $includeFilters) }
+    }
+
+    If ($availableExcludeFilter.Count -ge 1) {
+        $excludeFilters = $availableExcludeFilter | Out-GridView -OutputMode Multiple -Title ($Message.View_ChooseFilters -f "exclude")
+    }
+    
+    $bFirstLoop = $True
+    do {
+        If ($bFirstLoop) {
+            $bFirstLoop = $False
+        } Else {
+            Write-Host $Message.Err_SnapshotsTokeep -ForegroundColor Red
+        }
+        
+        $inputValue = Read-Host -Prompt ($Message.Que_SnapshotsToKeep -f $global:settings.Snapshots.ToKeep)
+
+        If ([String]::IsNullOrEmpty($inputValue)) {
+            $inputValue = $global:settings.Snapshots.ToKeep
+        }
+
+        Try {
+            $selection = [int]$inputValue
+        } Catch {
+            $selection = -1
+        }
+    } While ($selection -lt 0)
+    $snapshotsToKeep = $selection
+
+    $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -IncludeTag $includeFilters -ExcludeTag $excludeFilters -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -LogFile $sLogFile -Debug:($PSBoundParameters['Debug'] -eq $True)
+
+    If ($null -ne $snapshotsRemoved) {
+        $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
+        $i = 1
+
+        $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
+        $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
+            $PSItem.Number = $i
+            $i++
+        }
+
+        $aSnapshotListDetails = $newList
+
+        Return $aSnapshotListDetails
+    }
+}
+
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 # Info
@@ -508,6 +591,10 @@ $sLogFile = "$($sLogPath)\$($sLogName)"
 $aSnapshotListDetails = @()
 $cntDetails           = 0
 $snapshotsNumber      = 1
+
+# Table select
+$selectTotalFileSize = @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}}
+$selectTotalBlobSize = @{Label = "TotalBlobSize" ; Expression = {$PSItem.BlobSizeInString()}}
 
 # Menu
 $Title    = $Message.Oth_TitleActionMenu
@@ -608,6 +695,14 @@ $oSnapshotsList | ForEach-Object {
 }
 Write-Progress -Activity $Message.Prg_Complete -Completed
 
+If ($Listing) {
+    ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $sChooseGame -sLogFile ([ref]$sLogFile)
+
+    $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, $selectTotalFileSize, TotalBlob, $selectTotalBlobSize | Format-Table -AutoSize
+
+    exit 0
+}
+
 $listTags               = ($aSnapshotListDetails | Select-Object -ExpandProperty Tags -Unique)
 $availableExcludeFilter = $listTags
 
@@ -615,61 +710,15 @@ do {
     Clear-Host
     ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $sChooseGame -sLogFile ([ref]$sLogFile)
 
-    $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, @{Label = "TotalFileSize" ; Expression = {$PSItem.FileSizeInString()}} | Format-Table -AutoSize
+    $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, $selectTotalFileSize, TotalBlob, $selectTotalBlobSize | Format-Table -AutoSize
 
     $result = $host.ui.PromptForChoice($Title, $Question, $options, 0)
 
     ShowMessage -type "OTHER" -message ""
 
     switch ($result) {
-        0 {            
-            $includeFilters = $listTags | Out-GridView -OutputMode Multiple -Title ($Message.View_ChooseFilters -f "include")
-
-            If ($includeFilters.Count -ge 1) {
-                $availableExcludeFilter = $listTags | Where-Object { $PSItem -notmatch [String]::Join("|", $includeFilters) }
-            }
-
-            If ($availableExcludeFilter.Count -ge 1) {
-                $excludeFilters = $availableExcludeFilter | Out-GridView -OutputMode Multiple -Title ($Message.View_ChooseFilters -f "exclude")
-            }
-            
-            $bFirstLoop = $True
-            do {
-                If ($bFirstLoop) {
-                    $bFirstLoop = $False
-                } Else {
-                    Write-Host $Message.Err_SnapshotsTokeep -ForegroundColor Red
-                }
-                
-                $inputValue = Read-Host -Prompt ($Message.Que_SnapshotsToKeep -f $global:settings.Snapshots.ToKeep)
-        
-                If ([String]::IsNullOrEmpty($inputValue)) {
-                    $inputValue = $global:settings.Snapshots.ToKeep
-                }
-        
-                Try {
-                    $selection = [int]$inputValue
-                } Catch {
-                    $selection = -1
-                }
-            } While ($selection -lt 0)
-            $snapshotsToKeep = $selection
-
-            $snapshotsRemoved = .\Clean-Restic.ps1 -Game $sChooseGame -IncludeTag $includeFilters -ExcludeTag $excludeFilters -SnapshotToKeep $snapshotsToKeep -NoStats -FromGet -Debug:($PSBoundParameters['Debug'] -eq $True)
-
-            If ($null -ne $snapshotsRemoved) {
-                $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
-                $i = 1
-    
-                $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
-                $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
-                    $PSItem.Number = $i
-                    $i++
-                }
-    
-                $aSnapshotListDetails = $newList
-            }
-            
+        0 {
+            $aSnapshotListDetails = Invoke-Clean
             Break
         }
         1 {
