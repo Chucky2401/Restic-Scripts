@@ -193,8 +193,7 @@ PROCESS {
                     ShowLogMessage -type "OTHER" -message "`t$($PSItem)" -sLogFile ([ref]$sLogFile)
                 }
             }
-        
-            PAUSE
+            
             exit 1
         }
 
