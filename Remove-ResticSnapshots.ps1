@@ -113,8 +113,8 @@ BEGIN {
     }
 
     ##! Demo purpose only!
-    $NoStats  = $True
-    $NoDelete = $True
+    #$NoStats  = $True
+    #$NoDelete = $True
     ##! Demo purpose only!
 }
 
@@ -146,7 +146,7 @@ PROCESS {
             Write-Message -Type "OTHER" -Message $Message.Dbg_DelSnaps -Variables $($shortId) -LogFile ([ref]$LogFile)
             $aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $shortId ; Detail = "OK!" }
             ##! Demo purpose only!
-            Start-Sleep -Seconds 2
+            #Start-Sleep -Seconds 2
             ##! Demo purpose only!
         }
         $cntDetails++
@@ -165,9 +165,9 @@ END {
             Write-Message -Type "SUCCESS" -Message $Message.Suc_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile ([ref]$LogFile)
         }
     } Else {
-        #Write-Message -Type "OTHER" -Message $Message.Dbg_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile ([ref]$LogFile)
+        Write-Message -Type "OTHER" -Message $Message.Dbg_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile ([ref]$LogFile)
         ##! Demo purpose only!
-        Write-Message -Type "SUCCESS" -Message $Message.Suc_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile ([ref]$sLogFile)
+        #Write-Message -Type "SUCCESS" -Message $Message.Suc_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile ([ref]$sLogFile)
         ##! Demo purpose only!
     }
 
