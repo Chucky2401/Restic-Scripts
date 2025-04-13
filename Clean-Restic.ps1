@@ -1,41 +1,41 @@
 <#
-    .SYNOPSIS
-        Remove restic snapshot for a game
-    .DESCRIPTION
-        This script permit to remove restic snapshots for a game and to keep a certain amout of snapshots (by default: 5)
-    .PARAMETER Game
-        Game name of snapshots to delete
-    .PARAMETER IncludeTag
-        A filter on the snapshots to retrieve for the game
-    .PARAMETER ExcludeTag
-        Tag to ignore
-    .PARAMETER SnapshotToKeep
-        Number of snapshots to keep (by default: 5)
-    .PARAMETER NoDelete
-        Do not delete any snapshots, for testing purpose
-    .PARAMETER NoStats
-        Do not show stats at the end of the script.
-        Stats will show you the difference between and after removing snapshots.
-    .PARAMETER FromGet
-        If we call this script from Get-ResticGameSnapshots to not remove modules!
-    .EXAMPLE
-        .\Clean-Restic.ps1 "V Rising" 10
+  .SYNOPSIS
+    Remove restic snapshot for a game
+  .DESCRIPTION
+    This script permit to remove restic snapshots for a game and to keep a certain amout of snapshots (by default: 5)
+  .PARAMETER Game
+    Game name of snapshots to delete
+  .PARAMETER IncludeTag
+    A filter on the snapshots to retrieve for the game
+  .PARAMETER ExcludeTag
+    Tag to ignore
+  .PARAMETER SnapshotToKeep
+    Number of snapshots to keep (by default: 5)
+  .PARAMETER NoDelete
+    Do not delete any snapshots, for testing purpose
+  .PARAMETER NoStats
+    Do not show stats at the end of the script.
+    Stats will show you the difference between and after removing snapshots.
+  .PARAMETER FromGet
+    If we call this script from Get-ResticGameSnapshots to not remove modules!
+  .EXAMPLE
+    .\Clean-Restic.ps1 "V Rising" 10
 
-        Will remove V Rising snapsots and keep the 10 latest
-    .EXAMPLE
-        .\Clean-Restic.ps1 "V Rising" 10 -NoDelete
+    Will remove V Rising snapsots and keep the 10 latest
+  .EXAMPLE
+    .\Clean-Restic.ps1 "V Rising" 10 -NoDelete
 
-        Will simulate removing of V Rising snapshots
-    .NOTES
-        Name           : Clean-Restic
-        Version        : 3.0-Beta.2
-        Created by     : Chucky2401
-        Date Created   : 30/06/2022
-        Modify by      : Chucky2401
-        Date modified  : 14/05/2023
-        Change         : Exclude parameter fix
-    .LINK
-        https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
+    Will simulate removing of V Rising snapshots
+  .NOTES
+    Name           : Clean-Restic
+    Version        : 3.0.0-Beta.3
+    Created by     : Chucky2401
+    Date Created   : 30/06/2022
+    Modify by      : Chucky2401
+    Date modified  : 14/05/2023
+    Change         : Exclude parameter fix
+  .LINK
+    https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
 #>
 
 #---------------------------------------------------------[Script Parameters]------------------------------------------------------
