@@ -79,13 +79,15 @@ BEGIN {
         $global:DebugPreference = 'Continue'
     }
 
+    
+
     Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
     $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
 
-    Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Clean-Restic.psd1"
+    Import-LocalizedData -BindingVariable "Message" -BaseDirectory "$($PSScriptRoot)\local" -FileName "Clean-Restic.psd1"
 
-    Import-Module -Name ".\inc\modules\Tjvs.Settings"
-    Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
+    Import-Module -Name "$($PSScriptRoot)\inc\modules\Tjvs.Settings"
+    Import-Module -Name "$($PSScriptRoot)\inc\modules\Tjvs.Message", "$($PSScriptRoot)\inc\modules\Tjvs.Process", "$($PSScriptRoot)\inc\modules\Tjvs.Restic"
 
     #Set-PowerShellUICulture en-US
 
