@@ -368,7 +368,7 @@ END {
     Write-CenterText "*                               *" $sLogFile
     Write-CenterText "*********************************" $sLogFile
 
-    Remove-Module Tjvs.*
+    # Remove-Module Tjvs.*
   }
 
   If ($FromGet) {
