@@ -109,7 +109,7 @@ function Read-GameChoice {
   $nMiddle       = [Math]::Ceiling($Choices.Count/2)
   $nSubstract    = $nMiddle+1
   $aLines        = @()
-  $nGreaterSnapshotsCount = ($htGameSnapshotsCount.GetEnumerator() | Select-Object Value | Measure-Object -Property Value -Maximum).Maximum.ToString().Length
+  $nGreaterSnapshotsCount = ($gameSnapshotsCount | Select-Object Name | Measure-Object -Property Name -Maximum).Maximum.ToString().Length
 
   If ($Title -ne [String]::Empty) {
     Write-Host "`n`n"
@@ -121,7 +121,7 @@ function Read-GameChoice {
 
   $Choices | ForEach-Object {
     $sGame      = $PSItem
-    $nSnapshots = $htGameSnapshotsCount[$sGame]
+    $nSnapshots = ($gameSnapshotsCount | Where-Object { $PSItem.Name -eq $sGame }).SnapshotsCount
     $sString    = "[$(($counter).ToString())] $($sGame) ($($nSnapshots))"
 
     If ($counter -le $nMiddle) {
@@ -158,7 +158,6 @@ function Read-GameChoice {
       $selection = -1
     }
   } While ($selection -lt 1 -or $selection -gt $Choices.Count)
-
   Return $selection-1
 }
 
@@ -254,6 +253,20 @@ function Read-SnapshotChoice {
   Return $selection-1
 }
 
+#TODO: header
+function Get-TypeBackup {
+  param (
+    [array]$Tags
+  )
+
+  foreach ($item in $Tags) {
+    if ($item -match '^plan:(stopped|manual|gameplay)$') {
+      return $matches[0]
+    }
+  }
+  return $null
+}
+
 #TODO: Help header
 function Get-SnapshotsCount {
   <#
@@ -284,19 +297,39 @@ function Get-SnapshotsCount {
   [CmdletBinding()]
   Param(
     [Parameter(Mandatory = $true)]
-    [Object[]]$ResticOutObject
+    [Object[]]$ResticOutObject,
+    [Parameter(Mandatory = $true)]
+    [Object[]]$ListGames
   )
 
-  # Select
-  $oSelectTags = @{Label = "tags" ; Expression = {$PSItem.tags[0]}}
+  $gameSnapshotsCount = @()
 
-  $htGameSnapshotsCount = [ordered]@{}
+  $gameSnapshotsCount = foreach($game in $ListGames){
+    $stopped  = 0
+    $gameplay = 0
+    $manual   = 0
+    $numberSnapshots = ($ResticOutObject | Where-Object { $PSItem.tags -contains $game } | Group-Object -Property tags).Count
 
-  $ResticOutObject | Select-Object $oSelectTags | Sort-Object tags | Group-Object -Property tags | ForEach-Object {
-    $htGameSnapshotsCount.Add($PSItem.Name, $PSItem.Count)
+    $object = [PSCustomObject]@{
+        Name           = $game
+        SnapshotsCount = $numberSnapshots
+      }
+    
+    $typeBackups = $ResticOutObject | Where-Object { $PSItem.tags -contains $game } | Select-Object @{ Label = "Type" ; Expression = { Get-TypeBackup $PSItem.tags } } | Group-Object -Property Type
+
+    $stopped  = ($typeBackups | Where-Object { $PSItem.Name -match "stopped" }).Count
+    $gameplay = ($typeBackups | Where-Object { $PSItem.Name -match "gameplay" }).Count
+    $manual   = ($typeBackups | Where-Object { $PSItem.Name -match "manual" }).Count
+
+    $object | Add-Member -MemberType NoteProperty -Name "Stopped" -Value $stopped
+    $object | Add-Member -MemberType NoteProperty -Name "Gameplay" -Value $gameplay
+    $object | Add-Member -MemberType NoteProperty -Name "Manual" -Value $manual
+
+    $object
   }
 
-  return $htGameSnapshotsCount
+  # return $htGameSnapshotsCount
+  return $gameSnapshotsCount
 }
 
 #TODO: Help header
@@ -355,7 +388,7 @@ function Get-SnapshotsList {
     $tree     = $PSItem.tree
     $parent   = $PSItem.parent
     $dateTime = $PSItem.time
-    $tags     = $PSItem.tags | Select-Object -Skip 1
+    $tags     = Get-TypeBackup $PSItem.tags
     $paths    = $PSItem.paths
     $hostname = $PSItem.hostname
     $username = $PSItem.username
@@ -461,17 +494,17 @@ function Get-SnapshotDetails {
   # Pram Add-Member
   $hFileSizeInString = @{
     MemberType = "ScriptMethod"
-    Name = "FileSizeInString"
-    Value = $sbFileSizeInString
+    Name       = "FileSizeInString"
+    Value      = $sbFileSizeInString
   }
   
   $hBlobSizeInString = @{
     MemberType = "ScriptMethod"
-    Name = "BlobSizeInString"
-    Value = $sbBlobSizeInString
+    Name       = "BlobSizeInString"
+    Value      = $sbBlobSizeInString
   }
 
-  $oSnapshotDetails   = [PSCustomObject]@{
+  $oSnapshotDetails = [PSCustomObject]@{
     PSTypeName      = 'Tjvs.Restic.SnapshotsStats'
     Number          = $Number
     Game            = $Snapshot.Game
@@ -497,6 +530,7 @@ function Get-SnapshotDetails {
   return $oSnapshotDetails
 }
 
+#TODO: header
 function Invoke-Clean {
   <#
     .SYNOPSIS
@@ -513,7 +547,7 @@ function Invoke-Clean {
       .\template.ps1 param1
     .NOTES
       Name           : Script-Name
-      Version        : 1.0.0.1
+      Version        : 1.0.1
       Created by     : Chucky2401
       Date Created   : 27/07/2022
       Modify by      : Chucky2401
@@ -578,8 +612,7 @@ function Invoke-Clean {
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 # Info
-## Hashtable
-$htGameSnapshotsCount = [ordered]@{}
+$gameSnapshotsCount = @()
 
 # Logs
 $sLogPath = "$($PSScriptRoot)\logs"
@@ -641,13 +674,12 @@ $aListGames = $jsResultRestic | Select-Object tags | ForEach-Object {
 } | Select-Object -Unique | Sort-Object
 
 # Hashtable of games and snapshots count per game
-$htGameSnapshotsCount = Get-SnapshotsCount -ResticOutObject $jsResultRestic
+$gameSnapshotsCount = Get-SnapshotsCount -ResticOutObject $jsResultRestic -ListGames $aListGames
 
 ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetGames -sLogFile ([ref]$sLogFile)
 
 If ($CountOnly) {
-  $htGameSnapshotsCount.GetEnumerator() | Select-Object @{ Label = "Game" ; Expression = {$PSItem.Name} }, @{ Label = "Snapshots" ; Expression = {$PSItem.Value} }
-  ShowMessage -type "OTHER" -message ""
+  $gameSnapshotsCount
   
   Remove-Module Tjvs.*
   exit 0
@@ -727,18 +759,16 @@ do {
       $snapshotsRemoved = .\Remove-ResticSnapshots.ps1 -ShortIds $snapshotsChoose.ShortId -FromGet -LogFile ([ref]$sLogFile) -Debug:($PSBoundParameters['Debug'] -eq $True)
 
       If ($null -ne $snapshotsRemoved) {
-          $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
-          $i = 1
-  
-          $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
-          $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
-              $PSItem.Number = $i
-              $i++
-          }
-  
-          $aSnapshotListDetails = $newList
-  
-          #Return $aSnapshotListDetails
+        $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
+        $i = 1
+
+        $newList = $aSnapshotListDetails | Where-Object { $PSItem.ShortId -notMatch $delete }
+        $newList | Where-Object { $PSItem.ShortId -notMatch $delete } | ForEach-Object {
+            $PSItem.Number = $i
+            $i++
+        }
+
+        $aSnapshotListDetails = $newList
       }
       Break
     }
