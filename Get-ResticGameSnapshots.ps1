@@ -55,11 +55,13 @@ If ($PSBoundParameters['Debug']) {
   $global:DebugPreference = 'Continue'
 }
 
-Update-FormatData -AppendPath "$($PSScriptRoot)\inc\format\ResticControl.format.ps1xml"
+$scriptRoot = Split-Path $Script:MyInvocation.MyCommand.Path
+
+Update-FormatData -AppendPath "$($scriptRoot)\inc\format\ResticControl.format.ps1xml"
 $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
 
-Import-Module -Name ".\inc\modules\Tjvs.Settings"
-Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
+Import-Module -Name "$scriptRoot\inc\modules\Tjvs.Settings"
+Import-Module -Name "$scriptRoot\inc\modules\Tjvs.Message", "$scriptRoot\inc\modules\Tjvs.Process", "$scriptRoot\inc\modules\Tjvs.Restic"
 
 #Set-PowerShellUICulture en-US
 
