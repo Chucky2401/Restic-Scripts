@@ -101,36 +101,6 @@ BEGIN {
     }
 
     ## Common restic to use
-    $includeFilter    = "--tag `"$Game`""
-    $sharedFilter     = @()
-    $joinedTag        = @()
-    $messageTagFilter = ""
-
-    If (-not [String]::IsNullOrEmpty($IncludeTag)) {
-        $includeFilter = ""
-        $IncludeTag | ForEach-Object {
-            $includeFilter += " --tag `"$Game,$($PSItem)`""
-        }
-
-        $joinedTag += "$($Message.Oth_Include): $([String]::Join($Message.Oth_Or, $IncludeTag))"
-    }
-    $includeFilter = $includeFilter.Trim()
-
-    If (-not [String]::IsNullOrEmpty($ExcludeTag)) {
-        If (-not [String]::IsNullOrEmpty($IncludeTag)) {
-            $sharedFilter = (Compare-Object $IncludeTag $ExcludeTag -IncludeEqual -ExcludeDifferent).InputObject
-        }
-
-        If ($sharedFilter.Count -ge 1) {
-            Write-Message -Type "ERROR" -Message $Message.Err_ShaFilt -Variables ([String]::Join(" ; ", $sharedFilter)) -LogFile ([ref]$sLogFile)
-            Write-Message -Type "OTHER"
-
-            exit 0
-        }
-
-        $joinedTag += "$($Message.Oth_Exclude): $([String]::Join($Message.Oth_Or, $ExcludeTag))"
-    }
-    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join(" ; ", $joinedTag))
     
     # Logs
     $sLogFile = $LogFile
@@ -145,7 +115,6 @@ BEGIN {
 
     # Init Var
     $oDataBefore = $null
-    $cntDetails  = 1
     
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -181,6 +150,41 @@ PROCESS {
     $oDataBefore = Get-ResticStats
 
     foreach ($sGame in $Game) {
+        $includeFilter         = "--tag `"$sGame`""
+        $sharedFilter          = @()
+        $joinedTag             = @()
+        $messageTagFilter      = ""
+        $cntDetails            = 1
+        $aSnapshotRemoved      = @()
+        $aSnapshotStillPresent = @()
+
+        If (-not [String]::IsNullOrEmpty($IncludeTag)) {
+            $includeFilter = ""
+            $IncludeTag | ForEach-Object {
+                $includeFilter += " --tag `"$sGame,$($PSItem)`""
+            }
+
+            $joinedTag += "$($Message.Oth_Include): $([String]::Join($Message.Oth_Or, $IncludeTag))"
+        }
+        $includeFilter = $includeFilter.Trim()
+
+
+        If (-not [String]::IsNullOrEmpty($ExcludeTag)) {
+            If (-not [String]::IsNullOrEmpty($IncludeTag)) {
+                $sharedFilter = (Compare-Object $IncludeTag $ExcludeTag -IncludeEqual -ExcludeDifferent).InputObject
+            }
+
+            If ($sharedFilter.Count -ge 1) {
+                Write-Message -Type "ERROR" -Message $Message.Err_ShaFilt -Variables ([String]::Join(" ; ", $sharedFilter)) -LogFile ([ref]$sLogFile)
+                Write-Message -Type "OTHER"
+
+                exit 0
+            }
+
+            $joinedTag += "$($Message.Oth_Exclude): $([String]::Join($Message.Oth_Or, $ExcludeTag))"
+        }
+        $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join(" ; ", $joinedTag))
+
         ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sGame) -sLogFile ([ref]$sLogFile)
         $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) --json"
         
