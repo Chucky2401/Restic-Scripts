@@ -40,33 +40,42 @@
 
 #---------------------------------------------------------[Script Parameters]------------------------------------------------------
 
-[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low", DefaultParameterSetName = 'IncludeExclude')]
 Param (
-    [Parameter(Mandatory = $True, ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True)]
-    [ValidateNotNullOrEmpty()]
-    [Alias("g")]
-    [string[]]$Game,
-    [Parameter(Mandatory = $False)]
-    [Alias("i")]
-    [string[]]$IncludeTag = "",
-    [Parameter(Mandatory = $False)]
-    [Alias("e")]
-    [string[]]$ExcludeTag = "",
-    [Parameter(Mandatory = $False)]
-    [Alias("s")]
-    [int]$SnapshotToKeep,
-    [Parameter(Mandatory = $False)]
-    [Alias("n")]
-    [Switch]$NoDelete,
-    [Parameter(Mandatory = $False)]
-    [Alias("t")]
-    [Switch]$NoStats,
-    [Parameter(Mandatory = $False)]
-    [Alias("r")]
-    [Switch]$FromGet,
-    [Parameter(Mandatory = $False)]
-    [Alias("l")]
-    [String]$LogFile = $null
+  [Parameter(Mandatory = $True, ParameterSetName = "IncludeExclude", ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True)]
+  [Parameter(Mandatory = $True, ParameterSetName = "KeepLast", ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True)]
+  [ValidateNotNullOrEmpty()]
+  [Alias("g")]
+  [string[]]$Game,
+  [Parameter(Mandatory = $False, ParameterSetName = "IncludeExclude")]
+  [Alias("i")]
+  [string[]]$IncludeTag = "",
+  [Parameter(Mandatory = $False, ParameterSetName = "IncludeExclude")]
+  [Alias("e")]
+  [string[]]$ExcludeTag = "",
+  [Parameter(Mandatory = $False, ParameterSetName = "KeepLast")]
+  [Alias("k")]
+  [string]$KeepLast = "",
+  [Parameter(Mandatory = $False, ParameterSetName = "IncludeExclude")]
+  [Parameter(Mandatory = $False, ParameterSetName = "KeepLast")]
+  [Alias("s")]
+  [int]$SnapshotToKeep,
+  [Parameter(Mandatory = $False, ParameterSetName = "IncludeExclude")]
+  [Parameter(Mandatory = $False, ParameterSetName = "KeepLast")]
+  [Alias("n")]
+  [Switch]$NoDelete,
+  [Parameter(Mandatory = $False, ParameterSetName = "IncludeExclude")]
+  [Parameter(Mandatory = $False, ParameterSetName = "KeepLast")]
+  [Alias("t")]
+  [Switch]$NoStats,
+  [Parameter(Mandatory = $False, ParameterSetName = "IncludeExclude")]
+  [Parameter(Mandatory = $False, ParameterSetName = "KeepLast")]
+  [Alias("r")]
+  [Switch]$FromGet,
+  [Parameter(Mandatory = $False, ParameterSetName = "IncludeExclude")]
+  [Parameter(Mandatory = $False, ParameterSetName = "KeepLast")]
+  [Alias("l")]
+  [String]$LogFile = $null
 )
 
 BEGIN {
@@ -93,6 +102,19 @@ BEGIN {
 
     #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
+    function Get-TypeBackup {
+      param (
+        [array]$Tags
+      )
+
+      foreach ($item in $Tags) {
+        if ($item -match '^plan:(stopped|manual|gameplay)$') {
+          return $matches[0]
+        }
+      }
+      return $null
+    }
+
     #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
     ## Default settings
@@ -101,7 +123,7 @@ BEGIN {
     }
 
     ## Common restic to use
-    
+
     # Logs
     $sLogFile = $LogFile
     If ([String]::IsNullOrEmpty($LogFile)) {
@@ -115,7 +137,7 @@ BEGIN {
 
     # Init Var
     $oDataBefore = $null
-    
+
     #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
     $aSnapshotRemoved      = @()
@@ -182,11 +204,19 @@ PROCESS {
 
       $joinedTag += "$($Message.Oth_Exclude): $([String]::Join($Message.Oth_Or, $ExcludeTag))"
     }
-    $messageTagFilter = $Message.Oth_MessageFilter -f $([String]::Join(" ; ", $joinedTag))
 
     ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sGame) -sLogFile ([ref]$sLogFile)
+    If ($joinedTag.Count -eq 0 -and $paramSetName -eq "IncludeExclude") {
+      $joinedTag += "<NoFilter>"
+      $messageTagFilter = $Message.Oth_MessageFilterIncludeExclude -f $([String]::Join(" ; ", $joinedTag))
+    }
+
+    If ($paramSetName -eq "KeepLast") {
+      $messageTagFilter = $Message.Oth_MessageFilterKeepLast -f $KeepLast
+    }
+
     $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) --json"
-    
+
     If ($oResticProcess.ExitCode -eq 0) {
       ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetSnaps -sLogFile ([ref]$sLogFile)
       $jsResultRestic = $oResticProcess.stdout | ConvertFrom-Json
@@ -203,16 +233,26 @@ PROCESS {
     }
 
     $numberSnapshotsTotal = $jsResultRestic.Count
-    $numberSnapshotsToRemove = ($jsResultRestic | Where-Object { $PSItem.tags -notcontains $ExcludeTag } | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep).Count
-    
     ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
-    
+
+    If ($paramSetName -eq "KeepLast") {
+      $snapshotsToExclude      = [String]::Join("|", ($jsResultRestic | Select short_id, @{ Label = "Type" ; Expression = { Get-TypeBackup $PSItem.tags } }, time | Where-Object { $PSItem.Type -eq $KeepLast } | Sort-Object time | Select-Object -Last $SnapshotToKeep).short_id)
+      $snapshotsToRemove       = $jsResultRestic | Select short_id, @{ Label = "Type" ; Expression = { Get-TypeBackup $PSItem.tags } }, time | Where-Object { $PSItem.short_id -notmatch $snapshotsToExclude }
+      $numberSnapshotsToRemove = $snapshotsToRemove.Count
+    }
+
+    If ($paramSetName -eq "IncludeExclude") {
+      $snapshotsToRemove       = $jsResultRestic | Where-Object { $PSItem.tags -notcontains $ExcludeTag } | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep
+      $numberSnapshotsToRemove = ($snapshotsToRemove).Count
+    }
+
     If ($numberSnapshotsTotal -eq $numberSnapshotsToRemove) {
         ShowLogMessage -type "INFO" -message $Message.Inf_DelSnapsAll -variable $($sGame),$messageTagFilter -sLogFile ([ref]$sLogFile)
     } Else {
         ShowLogMessage -type "INFO" -message $Message.Inf_DelSnaps -variable $numberSnapshotsToRemove,$numberSnapshotsTotal,$($sGame),$messageTagFilter -sLogFile ([ref]$sLogFile)
     }
-    $jsResultRestic | Where-Object { $PSItem.tags -notcontains $ExcludeTag } | Sort-Object time | Select-Object -SkipLast $SnapshotToKeep | ForEach-Object {
+
+    $snapshotsToRemove | ForEach-Object {
       $iPercentComplete = [Math]::Round(($cntDetails/$numberSnapshotsToRemove)*100,2)
       $sSnapshotId = $PSItem.short_id
 
