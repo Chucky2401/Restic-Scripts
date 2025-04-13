@@ -54,7 +54,8 @@
 
     ## Other
     ### Filter
-    Oth_MessageFilter = " (Filtre: {0})" # 0: Tag filter
+    Oth_MessageFilterIncludeExclude = " (Filtre: {0})"   # 0: Tag filter
+    Oth_MessageFilterKeepLast       = " (KeepLast: {0})" # 0: Tag to keep
     ### Stats
     #### Before only
     Oth_BfrSnapNbr  = "`tNombre snapshots:           {0}"      # 0: Snapshots number before
