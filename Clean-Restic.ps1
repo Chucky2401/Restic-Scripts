@@ -42,7 +42,7 @@
 
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
 Param (
-    [Parameter(Mandatory = $True, ValueFromPipeline)]
+    [Parameter(Mandatory = $True, ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True)]
     [ValidateNotNullOrEmpty()]
     [Alias("g")]
     [string[]]$Game,
