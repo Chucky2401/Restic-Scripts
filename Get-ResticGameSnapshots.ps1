@@ -111,7 +111,7 @@ function Read-GameChoice {
   $nMiddle       = [Math]::Ceiling($Choices.Count/2)
   $nSubstract    = $nMiddle+1
   $aLines        = @()
-  $nGreaterSnapshotsCount = ($gameSnapshotsCount | Select-Object Name | Measure-Object -Property Name -Maximum).Maximum.ToString().Length
+  $nGreaterSnapshotsCount = ($gameSnapshotsCount | Select-Object Game | Measure-Object -Property Game -Maximum).Maximum.ToString().Length
 
   If ($Title -ne [String]::Empty) {
     Write-Host "`n`n"
@@ -123,7 +123,7 @@ function Read-GameChoice {
 
   $Choices | ForEach-Object {
     $sGame      = $PSItem
-    $nSnapshots = ($gameSnapshotsCount | Where-Object { $PSItem.Name -eq $sGame }).SnapshotsCount
+    $nSnapshots = ($gameSnapshotsCount | Where-Object { $PSItem.Game -eq $sGame }).SnapshotsCount
     $sString    = "[$(($counter).ToString())] $($sGame) ($($nSnapshots))"
 
     If ($counter -le $nMiddle) {
@@ -313,7 +313,7 @@ function Get-SnapshotsCount {
     $numberSnapshots = ($ResticOutObject | Where-Object { $PSItem.tags -contains $game } | Group-Object -Property tags).Count
 
     $object = [PSCustomObject]@{
-        Name           = $game
+        Game           = $game
         SnapshotsCount = $numberSnapshots
       }
     
