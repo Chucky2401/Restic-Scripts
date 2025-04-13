@@ -711,7 +711,7 @@ do {
 
     $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, $selectTotalFileSize, TotalBlob, $selectTotalBlobSize | Format-Table -AutoSize
 
-    $result = $host.ui.PromptForChoice($Title, $Question, $options, 0)
+    $result = $host.ui.PromptForChoice($Title, $Question, $options, 2)
 
     ShowMessage -type "OTHER" -message ""
 
