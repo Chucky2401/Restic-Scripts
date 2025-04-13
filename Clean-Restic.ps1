@@ -169,7 +169,9 @@ BEGIN {
 PROCESS {
 
   # Info
-  $oDataBefore = Get-ResticStats
+  If (!$NoStats) {
+    $oDataBefore = Get-ResticStats
+  }
 
   foreach ($sGame in $Game) {
     $includeFilter         = "--tag `"$sGame`""
