@@ -683,7 +683,7 @@ ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetGames -sLogFile ([ref]$s
 If ($CountOnly) {
   $gameSnapshotsCount
   
-  Remove-Module Tjvs.*
+  # Remove-Module Tjvs.*
   exit 0
 }
 
@@ -707,7 +707,7 @@ If ($gameIndice -eq -1) {
   ShowMessage -type "ERROR" -message $Message.Err_GameChoiceParam -variable $($Game)
   ShowMessage -type "OTHER" -message ""
   
-  Remove-Module Tjvs.*
+  # Remove-Module Tjvs.*
   exit 1
 }
 
@@ -733,7 +733,7 @@ Write-Progress -Activity $Message.Prg_Complete -Completed
 If ($Listing) {
   $aSnapshotListDetails
 
-  Remove-Module Tjvs.*
+  # Remove-Module Tjvs.*
   exit 0
 }
 
@@ -783,4 +783,4 @@ do {
   }
 } while ($result -ne 2)
 
-Remove-Module Tjvs.*
+# Remove-Module Tjvs.*
