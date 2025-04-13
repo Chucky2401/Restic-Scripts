@@ -16,12 +16,12 @@
     .\Get-ResticGameSnapshots.ps1
   .NOTES
     Name           : Get-ResticGameSapshots
-    Version        : 3.0-Beta.2
+    Version        : 3.0.0-Beta.3
     Created by     : Chucky2401
     Date Created   : 25/07/2022
     Modify by      : Chucky2401
-    Date modified  : 19/05/2023
-    Change         : Exclude parameter
+    Date modified  : 13/04/2025
+    Change         : Add counter for stopped/manual/gameplay snapshots
   .LINK
     https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#get-resticgamesnapshots
 #>
