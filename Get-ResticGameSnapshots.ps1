@@ -745,7 +745,7 @@ do {
     1 {
       $snapshotsChoose = $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, $selectTotalFileSize, TotalBlob, $selectTotalBlobSize | Out-GridView -OutputMode Multiple -Title "Choose snapshots to delete"
       
-      $snapshotsRemoved = .\Remove-ResticSnapshots.ps1 -ShortIds $snapshotsChoose.ShortId -FromGet -LogFile ([ref]$sLogFile) -Debug:($PSBoundParameters['Debug'] -eq $True)
+      $snapshotsRemoved = .\Remove-ResticSnapshots.ps1 -ShortIds $snapshotsChoose.ShortId -FromGet -LogFile $logRef -Debug:($PSBoundParameters['Debug'] -eq $True)
 
       If ($null -ne $snapshotsRemoved) {
         $delete = [String]::Join("|", $snapshotsRemoved.SnapshotId)
