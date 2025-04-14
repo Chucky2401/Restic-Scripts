@@ -255,20 +255,6 @@ function Read-SnapshotChoice {
   Return $selection-1
 }
 
-#TODO: header
-function Get-TypeBackup {
-  param (
-    [array]$Tags
-  )
-
-  foreach ($item in $Tags) {
-    if ($item -match '^plan:(stopped|manual|gameplay)$') {
-      return $matches[0]
-    }
-  }
-  return $null
-}
-
 #TODO: Help header
 function Get-SnapshotsCount {
   <#
