@@ -79,92 +79,80 @@ Param (
 )
 
 BEGIN {
-    #---------------------------------------------------------[Initialisations]--------------------------------------------------------
+  #---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
-    #Set Error Action to Silently Continue
-    $global:ErrorActionPreference = "Stop"
-    $global:DebugPreference       = 'SilentlyContinue'
+  #Set Error Action to Silently Continue
+  $global:ErrorActionPreference = "Stop"
+  $global:DebugPreference       = 'SilentlyContinue'
+  If ($PSBoundParameters['Debug']) {
+      $global:DebugPreference = 'Continue'
+  }
+
+  $paramSetName = $PSCmdlet.ParameterSetName
+  $scriptRoot = Split-Path $Script:MyInvocation.MyCommand.Path
+
+  Update-FormatData -AppendPath "$($scriptRoot)\inc\format\ResticControl.format.ps1xml"
+  $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
+
+  Import-LocalizedData -BindingVariable "Message" -BaseDirectory "$($scriptRoot)\local" -FileName "Clean-Restic.psd1"
+
+  Import-Module -Name "$($scriptRoot)\inc\modules\Tjvs.Settings"
+  Import-Module -Name "$($scriptRoot)\inc\modules\Tjvs.Message", "$($scriptRoot)\inc\modules\Tjvs.Process", "$($scriptRoot)\inc\modules\Tjvs.Restic"
+
+  #Set-PowerShellUICulture en-US
+
+  #-----------------------------------------------------------[Functions]------------------------------------------------------------
+
+  #----------------------------------------------------------[Declarations]----------------------------------------------------------
+
+  ## Default settings
+  If ($PSBoundParameters.ContainsKey('SnapshotToKeep') -eq $False) {
+    $SnapshotToKeep = $global:settings.Snapshots.ToKeep
+  }
+
+  ## Common restic to use
+
+  # Logs
+  $sLogFile = $LogFile
+  If ([String]::IsNullOrEmpty($LogFile)) {
+    $sLogPath = "$($PSScriptRoot)\logs"
+    $sLogName = "Restic-Clean_old_backup-$(Get-Date -Format 'yyyy.MM.dd')-$(Get-Date -Format 'HH.mm').log"
     If ($PSBoundParameters['Debug']) {
-        $global:DebugPreference = 'Continue'
+      $sLogName = "DEBUG-$($sLogName)"
     }
+    $sLogFile = "$($sLogPath)\$($sLogName)"
+  }
+  $logRef = ([ref]$sLogFile)
 
-    $paramSetName = $PSCmdlet.ParameterSetName
-    $scriptRoot = Split-Path $Script:MyInvocation.MyCommand.Path
+  # Init Var
+  $oDataBefore = $null
 
-    Update-FormatData -AppendPath "$($scriptRoot)\inc\format\ResticControl.format.ps1xml"
-    $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
+  #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
-    Import-LocalizedData -BindingVariable "Message" -BaseDirectory "$($scriptRoot)\local" -FileName "Clean-Restic.psd1"
+  $aSnapshotRemoved      = @()
+  $aSnapshotStillPresent = @()
 
-    Import-Module -Name "$($scriptRoot)\inc\modules\Tjvs.Settings"
-    Import-Module -Name "$($scriptRoot)\inc\modules\Tjvs.Message", "$($scriptRoot)\inc\modules\Tjvs.Process", "$($scriptRoot)\inc\modules\Tjvs.Restic"
+  If (-not $FromGet){
+    Write-CenterText "*********************************" $sLogFile
+    Write-CenterText "*                               *" $sLogFile
+    Write-CenterText "*      Restic clean backup      *" $sLogFile
+    Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
+    Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
+    Write-CenterText "*                               *" $sLogFile
+    Write-CenterText "*********************************" $sLogFile
+  }
+  Write-Message -Type "OTHER" -Message "" -LogFile $logRef
 
-    #Set-PowerShellUICulture en-US
+  If (-not $global:settings.Global.Stats) {
+    Write-Warning $Message.Warn_StatsDisable
+    Write-Message -Type "OTHER" -Message "" -LogFile $logRef
+    $NoStats = $True
+  }
 
-    #-----------------------------------------------------------[Functions]------------------------------------------------------------
-
-    function Get-TypeBackup {
-      param (
-        [array]$Tags
-      )
-
-      foreach ($item in $Tags) {
-        if ($item -match '^plan:(stopped|manual|gameplay)$') {
-          return $matches[0]
-        }
-      }
-      return $null
-    }
-
-    #----------------------------------------------------------[Declarations]----------------------------------------------------------
-
-    ## Default settings
-    If ($PSBoundParameters.ContainsKey('SnapshotToKeep') -eq $False) {
-      $SnapshotToKeep = $global:settings.Snapshots.ToKeep
-    }
-
-    ## Common restic to use
-
-    # Logs
-    $sLogFile = $LogFile
-    If ([String]::IsNullOrEmpty($LogFile)) {
-      $sLogPath = "$($PSScriptRoot)\logs"
-      $sLogName = "Restic-Clean_old_backup-$(Get-Date -Format 'yyyy.MM.dd')-$(Get-Date -Format 'HH.mm').log"
-      If ($PSBoundParameters['Debug']) {
-        $sLogName = "DEBUG-$($sLogName)"
-      }
-      $sLogFile = "$($sLogPath)\$($sLogName)"
-    }
-
-    # Init Var
-    $oDataBefore = $null
-
-    #-----------------------------------------------------------[Execution]------------------------------------------------------------
-
-    $aSnapshotRemoved      = @()
-    $aSnapshotStillPresent = @()
-
-    If (-not $FromGet){
-      Write-CenterText "*********************************" $sLogFile
-      Write-CenterText "*                               *" $sLogFile
-      Write-CenterText "*      Restic clean backup      *" $sLogFile
-      Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-      Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
-      Write-CenterText "*                               *" $sLogFile
-      Write-CenterText "*********************************" $sLogFile
-    }
-    Write-Message -Type "OTHER" -Message "" -LogFile ([ref]$sLogFile)
-
-    If (-not $global:settings.Global.Stats) {
-      Write-Warning $Message.Warn_StatsDisable
-      Write-Message -Type "OTHER" -Message "" -LogFile ([ref]$sLogFile)
-      $NoStats = $True
-    }
-
-    ##! Demo purpose only!
-    #$NoStats  = $True
-    #$NoDelete = $True
-    ##! Demo purpose only!
+  ##! Demo purpose only!
+  #$NoStats  = $True
+  #$NoDelete = $True
+  ##! Demo purpose only!
 }
 
 PROCESS {
