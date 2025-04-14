@@ -11,7 +11,7 @@
     RootModule = 'Tjvs.Restic.psm1'
 
     # Version number of this module.
-    ModuleVersion = '1.1'
+    ModuleVersion = '1.2.0'
 
     # Supported PSEditions
     CompatiblePSEditions = 'Desktop', 'Core'
@@ -68,7 +68,7 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @('Get-ResticStats', 'ConvertTo-HashtableSize', 'Remove-Environment', 'Set-Environment')
+    FunctionsToExport = @('ConvertTo-HashtableSize', 'Get-ResticStats', 'Get-TypeBackup', 'Remove-Environment', 'Set-Environment')
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport = @()
