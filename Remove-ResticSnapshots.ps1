@@ -59,11 +59,12 @@ BEGIN {
   }
 
   $PSStyle.Progress.MaxWidth = ($Host.UI.RawUI.WindowSize.Width)
+  $scriptRoot = Split-Path $Script:MyInvocation.MyCommand.Path
 
-  Import-LocalizedData -BindingVariable "Message" -BaseDirectory "local" -FileName "Remove-ResticSnapshots.psd1"
+  Import-LocalizedData -BindingVariable "Message" -BaseDirectory "$scriptRoot\local" -FileName "Remove-ResticSnapshots.psd1"
 
-  Import-Module -Name ".\inc\modules\Tjvs.Settings"
-  Import-Module -Name ".\inc\modules\Tjvs.Message", ".\inc\modules\Tjvs.Process", ".\inc\modules\Tjvs.Restic"
+  Import-Module -Name "$scriptRoot\inc\modules\Tjvs.Settings"
+  Import-Module -Name "$scriptRoot\inc\modules\Tjvs.Message", "$scriptRoot\inc\modules\Tjvs.Process", "$scriptRoot\inc\modules\Tjvs.Restic"
 
   #Set-PowerShellUICulture en-US
 
