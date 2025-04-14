@@ -28,11 +28,11 @@
     Will simulate removing of V Rising snapshots
   .NOTES
     Name           : Clean-Restic
-    Version        : 3.0.0-Beta.3
+    Version        : 3.0.0
     Created by     : Chucky2401
     Date Created   : 30/06/2022
     Modify by      : Chucky2401
-    Date modified  : 14/05/2023
+    Date modified  : 14/04/2025
     Change         : Exclude parameter fix
   .LINK
     https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
