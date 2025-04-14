@@ -187,7 +187,7 @@ PROCESS {
       }
 
       If ($sharedFilter.Count -ge 1) {
-        Write-Message -Type "ERROR" -Message $Message.Err_ShaFilt -Variables ([String]::Join(" ; ", $sharedFilter)) -LogFile ([ref]$sLogFile)
+        Write-Message -Type "ERROR" -Message $Message.Err_ShaFilt -Variables ([String]::Join(" ; ", $sharedFilter)) -LogFile $logRef
         Write-Message -Type "OTHER"
 
         exit 0
@@ -205,18 +205,18 @@ PROCESS {
       $messageTagFilter = $Message.Oth_MessageFilterKeepLast -f $KeepLast
     }
 
-    Write-Message -Type "INFO" -Message $Message.Inf_GetSnaps -Variables $($sGame) -LogFile ([ref]$sLogFile)
+    Write-Message -Type "INFO" -Message $Message.Inf_GetSnaps -Variables $($sGame) -LogFile $logRef
     $oResticProcess = Start-Command -Title "Restic - Get $($sGame) snapshots" -FilePath restic -ArgumentList "snapshots $($includeFilter) --json"
 
     If ($oResticProcess.ExitCode -eq 0) {
-      Write-Message -Type "SUCCESS" -Message $Message.Suc_GetSnaps -LogFile ([ref]$sLogFile)
+      Write-Message -Type "SUCCESS" -Message $Message.Suc_GetSnaps -LogFile $logRef
       $jsResultRestic = $oResticProcess.stdout | ConvertFrom-Json
     } Else {
-      Write-Message -Type "ERROR" -Message $Message.Err_GetSnaps -Variables $($oResticProcess.ExitCode) -LogFile ([ref]$sLogFile)
+      Write-Message -Type "ERROR" -Message $Message.Err_GetSnaps -Variables $($oResticProcess.ExitCode) -LogFile $logRef
       If ($PSBoundParameters['Debug']) {
-        Write-Message -Type "DEBUG" -Message $Message.Dbg_ErrDetail -LogFile ([ref]$sLogFile)
+        Write-Message -Type "DEBUG" -Message $Message.Dbg_ErrDetail -LogFile $logRef
         $oResticProcess.stderr | Where-Object { $PSItem -ne "" } | ForEach-Object {
-          Write-Message -Type "OTHER" -Message "`t$($PSItem)" -LogFile ([ref]$sLogFile)
+          Write-Message -Type "OTHER" -Message "`t$($PSItem)" -LogFile $logRef
         }
       }
 
@@ -236,12 +236,12 @@ PROCESS {
       $numberSnapshotsToRemove = ($snapshotsToRemove).Count
     }
 
-    Write-Message -Type "OTHER" -Message "" -LogFile ([ref]$sLogFile)
+    Write-Message -Type "OTHER" -Message "" -LogFile $logRef
 
     If ($numberSnapshotsTotal -eq $numberSnapshotsToRemove) {
-      Write-Message -Type "INFO" -Message $Message.Inf_DelSnapsAll -Variables $($sGame),$messageTagFilter -LogFile ([ref]$sLogFile)
+      Write-Message -Type "INFO" -Message $Message.Inf_DelSnapsAll -Variables $($sGame),$messageTagFilter -LogFile $logRef
     } Else {
-      Write-Message -Type "INFO" -Message $Message.Inf_DelSnaps -Variables $numberSnapshotsToRemove,$numberSnapshotsTotal,$($sGame),$messageTagFilter -LogFile ([ref]$sLogFile)
+      Write-Message -Type "INFO" -Message $Message.Inf_DelSnaps -Variables $numberSnapshotsToRemove,$numberSnapshotsTotal,$($sGame),$messageTagFilter -LogFile $logRef
     }
 
     $snapshotsToRemove | ForEach-Object {
@@ -260,15 +260,15 @@ PROCESS {
           $aResultDelete          = $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" }
           $aSnapshotStillPresent += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", $aResultDelete) }
 
-          Write-Message -Type "ERROR" -Message $Message.Err_DelSnaps -Variables $($sSnapshotId),$($oResticProcess.ExitCode) -LogFile ([ref]$sLogFile)
+          Write-Message -Type "ERROR" -Message $Message.Err_DelSnaps -Variables $($sSnapshotId),$($oResticProcess.ExitCode) -LogFile $logRef
 
           If ($PSBoundParameters['Debug']) {
-            Write-Message -Type "DEBUG" -Message $Message.Dbg_ErrDetail -LogFile ([ref]$sLogFile)
-            Write-Message -Type "OTHER" -Message "`t$(($aSnapshotStillPresent | Select-Object -Last 1).Detail)" -LogFile ([ref]$sLogFile)
+            Write-Message -Type "DEBUG" -Message $Message.Dbg_ErrDetail -LogFile $logRef
+            Write-Message -Type "OTHER" -Message "`t$(($aSnapshotStillPresent | Select-Object -Last 1).Detail)" -LogFile $logRef
           }
         }
       } Else {
-        Write-Message -Type "OTHER" -Message $Message.Dbg_DelSnaps -Variables $($sSnapshotId) -LogFile ([ref]$sLogFile)
+        Write-Message -Type "OTHER" -Message $Message.Dbg_DelSnaps -Variables $($sSnapshotId) -LogFile $logRef
         $aSnapshotRemoved += $sSnapshotId
         ##! Demo purpose only!
         #$aSnapshotRemoved += [PSCustomObject]@{ SnapshotId = $sSnapshotId ; Detail = [String]::Join("//", "OK!") }
@@ -281,73 +281,73 @@ PROCESS {
 
     If (!$NoDelete) {
       If ($aSnapshotStillPresent.Count -ge 1) {
-        Write-Message -Type "WARNING" -Message $Message.Warn_SumDel -Variables $($aSnapshotRemoved.Count),$($aSnapshotStillPresent.Count) -LogFile ([ref]$sLogFile)
+        Write-Message -Type "WARNING" -Message $Message.Warn_SumDel -Variables $($aSnapshotRemoved.Count),$($aSnapshotStillPresent.Count) -LogFile $logRef
       } Else {
-        Write-Message -Type "SUCCESS" -Message $Message.Suc_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile ([ref]$sLogFile)
+        Write-Message -Type "SUCCESS" -Message $Message.Suc_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile $logRef
       }
     } Else {
-      Write-Message -Type "OTHER" -Message $Message.Dbg_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile ([ref]$sLogFile)
+      Write-Message -Type "OTHER" -Message $Message.Dbg_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile $logRef
       ##! Demo purpose only!
-      #Write-Message -Type "SUCCESS" -Message $Message.Suc_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile ([ref]$sLogFile)
+      #Write-Message -Type "SUCCESS" -Message $Message.Suc_SumDel -Variables $($aSnapshotRemoved.Count) -LogFile $logRef
       ##! Demo purpose only!
     }
 
-    Write-Message -Type "OTHER" -Message "" -LogFile ([ref]$sLogFile)
+    Write-Message -Type "OTHER" -Message "" -LogFile $logRef
   }
 
 }
 
 END {
   If (!$NoDelete) {
-    Write-Message -Type "INFO" -Message $Message.Inf_Prune -LogFile ([ref]$sLogFile)
+    Write-Message -Type "INFO" -Message $Message.Inf_Prune -LogFile $logRef
     $oResticProcess = Start-Command -Title "Restic - Prune" -FilePath restic -ArgumentList "prune -n"
 
     If ($oResticProcess.ExitCode -eq 0) {
       #Success
-      Write-Message -Type "SUCCESS" -Message $Message.Suc_Prune -LogFile ([ref]$sLogFile)
+      Write-Message -Type "SUCCESS" -Message $Message.Suc_Prune -LogFile $logRef
 
       If ($PSBoundParameters['Debug'] -or $PSBoundParameters['Verbose']) {
-        Write-Message -Type "OTHER" -Message "" -LogFile ([ref]$sLogFile)
-        Write-Message -Type "DEBUG" -Message $Message.Dbg_PruneDetail -LogFile ([ref]$sLogFile)
+        Write-Message -Type "OTHER" -Message "" -LogFile $logRef
+        Write-Message -Type "DEBUG" -Message $Message.Dbg_PruneDetail -LogFile $logRef
         $oResticProcess.stdout.Split("`n") | Select-Object -Skip 10 -First 6 | ForEach-Object {
-          Write-Message -Type "OTHER" -Message "`t$($PSItem)" -LogFile ([ref]$sLogFile)
+          Write-Message -Type "OTHER" -Message "`t$($PSItem)" -LogFile $logRef
         }
       }
     } Else {
       #Failed
-      Write-Message -Type "ERROR" -Message $Message.Err_Prune -Variables $($oResticProcess.ExitCode) -LogFile ([ref]$sLogFile)
+      Write-Message -Type "ERROR" -Message $Message.Err_Prune -Variables $($oResticProcess.ExitCode) -LogFile $logRef
 
       If ($PSBoundParameters['Debug']) {
-        Write-Message -Type "OTHER" -Message "" -LogFile ([ref]$sLogFile)
-        Write-Message -Type "DEBUG" -Message $Message.Dbg_ErrDetail -LogFile ([ref]$sLogFile)
+        Write-Message -Type "OTHER" -Message "" -LogFile $logRef
+        Write-Message -Type "DEBUG" -Message $Message.Dbg_ErrDetail -LogFile $logRef
         $oResticProcess.stderr.Split("`n") | Where-Object { $PSItem -ne "" } | ForEach-Object {
-          Write-Message -Type "OTHER" -Message "`t$($PSItem)" -LogFile ([ref]$sLogFile)
+          Write-Message -Type "OTHER" -Message "`t$($PSItem)" -LogFile $logRef
         }
       }
     }
   }
 
-  Write-Message -Type "OTHER" -Message "" -LogFile ([ref]$sLogFile)
+  Write-Message -Type "OTHER" -Message "" -LogFile $logRef
 
   If (!$NoStats -and !$NoDelete) {
     # Stats
     $oDataAfter = Get-ResticStats
 
-    Write-Message -Type "INFO" -Message $Message.Inf_StatsBoth -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BothSnapNbr -Variables $($oDataBefore.SnapshotNumber),$($oDataAfter.SnapshotNumber) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BothFileBck -Variables $($oDataBefore.TotalFileBackup),$($oDataAfter.TotalFileBackup) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BothFileSize -Variables $($oDataBefore.FileSizeInString()),$($oDataAfter.FileSizeInString()) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BothBlob -Variables $($oDataBefore.TotalBlob),$($oDataAfter.TotalBlob) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BothBlobSize -Variables $($oDataBefore.BlobSizeInString()),$($oDataAfter.BlobSizeInString()) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BothRatio -Variables $($oDataBefore.Ratio),$($oDataAfter.Ratio) -LogFile ([ref]$sLogFile)
+    Write-Message -Type "INFO" -Message $Message.Inf_StatsBoth -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BothSnapNbr -Variables $($oDataBefore.SnapshotNumber),$($oDataAfter.SnapshotNumber) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BothFileBck -Variables $($oDataBefore.TotalFileBackup),$($oDataAfter.TotalFileBackup) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BothFileSize -Variables $($oDataBefore.FileSizeInString()),$($oDataAfter.FileSizeInString()) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BothBlob -Variables $($oDataBefore.TotalBlob),$($oDataAfter.TotalBlob) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BothBlobSize -Variables $($oDataBefore.BlobSizeInString()),$($oDataAfter.BlobSizeInString()) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BothRatio -Variables $($oDataBefore.Ratio),$($oDataAfter.Ratio) -LogFile $logRef
   } ElseIf (!$NoStats -and $NoDelete) {
-    Write-Message -Type "INFO" -Message $Message.Inf_StatsBefore -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BfrSnapNbr -Variables $($oDataBefore.SnapshotNumber) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BfrFileBck -Variables $($oDataBefore.TotalFileBackup) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BfrFileSize -Variables $($oDataBefore.FileSizeInString()) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BfrBlob -Variables $($oDataBefore.TotalBlob) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BfrBlobSize -Variables $($oDataBefore.BlobSizeInString()) -LogFile ([ref]$sLogFile)
-    Write-Message -Type "OTHER" -Message $Message.Oth_BfrRatio -Variables $($oDataBefore.Ratio) -LogFile ([ref]$sLogFile)
+    Write-Message -Type "INFO" -Message $Message.Inf_StatsBefore -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BfrSnapNbr -Variables $($oDataBefore.SnapshotNumber) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BfrFileBck -Variables $($oDataBefore.TotalFileBackup) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BfrFileSize -Variables $($oDataBefore.FileSizeInString()) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BfrBlob -Variables $($oDataBefore.TotalBlob) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BfrBlobSize -Variables $($oDataBefore.BlobSizeInString()) -LogFile $logRef
+    Write-Message -Type "OTHER" -Message $Message.Oth_BfrRatio -Variables $($oDataBefore.Ratio) -LogFile $logRef
   }
 
   If (-not $FromGet) {
