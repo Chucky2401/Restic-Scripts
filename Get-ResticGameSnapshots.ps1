@@ -139,7 +139,7 @@ function Read-GameChoice {
   $aLines | ForEach-Object {
     Write-Host $PSItem
   }
-  ShowMessage "OTHER" ""
+  Write-Message -Type "OTHER" -Message ""
 
   do {
     If ($bFirstLoop) {
@@ -240,7 +240,7 @@ function Read-SnapshotChoice {
     Write-Host " $(($counter++).ToString().PadLeft($iMaxLengthNumber, " ")) | $($PSItem.ShortId.PadRight($iMaxLengthShortId, " ")) | $($PSItem.DateTime.ToString().PadLeft($iMaxLengthDateTime, " ")) | $($PSItem.Tags.PadRight($iMaxLengthTags, " ")) | $($PSItem.TotalFileBackup.ToString().PadLeft($iMaxLengthTotalFileBackup, " ")) | $($PSItem.FileSizeInString().PadRight($iMaxLengthFileSize, " ")) | $($PSItem.TotalBlob.ToString().PadLeft($iMaxLengthTotalBlob, " ")) | $($PSItem.BlobSizeInString().PadRight($iMaxLengthBlobSize, " ")) | $($PSItem.Ratio.ToString().PadRight($iMaxLengthRatio, " "))"
   }
 
-  ShowMessage "OTHER" ""
+  Write-Message -Type "OTHER" -Message ""
 
   do {
     If ($bFirstLoop) {
@@ -623,6 +623,7 @@ If ($PSBoundParameters['Debug']) {
     $sLogName = "DEBUG-$($sLogName)"
 }
 $sLogFile = "$($sLogPath)\$($sLogName)"
+$logRef = ([ref]$sLogFile)
 
 $aSnapshotListDetails = @()
 $cntDetails           = 0
@@ -649,18 +650,18 @@ Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLog
 Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
 Write-CenterText "*                               *" $sLogFile
 Write-CenterText "*********************************" $sLogFile
-ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
+Write-Message -Type "OTHER" -Message "" -LogFile $logRef
 
 # List games
-ShowLogMessage -type "INFO" -message $Message.Inf_GetGames -sLogFile ([ref]$sLogFile)
+Write-Message -Type "INFO" -Message $Message.Inf_GetGames -LogFile $logRef
 $oResticProcess = Start-Command -Title "Restic Snapshots" -FilePath restic -ArgumentList "$($sCommonResticArguments) --json snapshots"
 
 If ($oResticProcess.ExitCode -ne 0) {
-  ShowLogMessage -type "ERROR" -message $Message.Err_GetGames -variable $($oResticProcess.ExitCode) -sLogFile ([ref]$sLogFile)
+  Write-Message -Type "ERROR" -Message $Message.Err_GetGames -Variables $($oResticProcess.ExitCode) -LogFile $logRef
   If ($PSBoundParameters['Debug']) {
-    ShowLogMessage -type "DEBUG" -message $Message.Dbg_ErrDetail -sLogFile ([ref]$sLogFile)
+    Write-Message -Type "DEBUG" -Message $Message.Dbg_ErrDetail -LogFile $logRef
     $oResticProcess.stderr | Where-Object { $PSItem -ne "" } | ForEach-Object {
-      ShowLogMessage -type "OTHER" -message "`t$($PSItem)" -sLogFile ([ref]$sLogFile)
+      Write-Message -Type "OTHER" -Message "`t$($PSItem)" -LogFile $logRef
     }
   }
 
@@ -678,7 +679,7 @@ $aListGames = $jsResultRestic | Select-Object tags | ForEach-Object {
 # Hashtable of games and snapshots count per game
 $gameSnapshotsCount = Get-SnapshotsCount -ResticOutObject $jsResultRestic -ListGames $aListGames
 
-ShowLogMessage -type "SUCCESS" -message $Message.Suc_GetGames -sLogFile ([ref]$sLogFile)
+Write-Message -Type "SUCCESS" -Message $Message.Suc_GetGames -LogFile $logRef
 
 If ($CountOnly) {
   $gameSnapshotsCount
@@ -687,12 +688,12 @@ If ($CountOnly) {
   exit 0
 }
 
-ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
+Write-Message -Type "OTHER" -Message "" -LogFile $logRef
 
 If ([String]::IsNullOrEmpty($Game)) {
   $gameIndice = Read-GameChoice -Title $Message.Que_GameChoiceTitle -Message $Message.Que_GameChoiceMsg -Choices $aListGames
   If ($gameIndice -eq "q") {
-    ShowMessage "OTHER" ""
+    Write-Message -Type "OTHER" -Message ""
     
     Remove-Module Tjvs.*
     exit 0
@@ -704,8 +705,8 @@ If (-not [String]::IsNullOrEmpty($Game)) {
 }
 
 If ($gameIndice -eq -1) {
-  ShowMessage -type "ERROR" -message $Message.Err_GameChoiceParam -variable $($Game)
-  ShowMessage -type "OTHER" -message ""
+  Write-Message -Type "ERROR" -Message $Message.Err_GameChoiceParam -Variables $($Game)
+  Write-Message -Type "OTHER" -Message ""
   
   # Remove-Module Tjvs.*
   exit 1
@@ -713,9 +714,9 @@ If ($gameIndice -eq -1) {
 
 $sChooseGame = $aListGames[$gameIndice]
 
-ShowLogMessage -type "OTHER" -message "" -sLogFile ([ref]$sLogFile)
+Write-Message -Type "OTHER" -Message "" -LogFile $logRef
 
-ShowLogMessage -type "INFO" -message $Message.Inf_GetSnaps -variable $($sChooseGame) -sLogFile ([ref]$sLogFile)
+Write-Message -Type "INFO" -Message $Message.Inf_GetSnaps -Variables $($sChooseGame) -LogFile $logRef
 $oSnapshotsList = Get-SnapshotsList -Game $sChooseGame
 
 $oSnapshotsList | ForEach-Object {
@@ -742,13 +743,13 @@ $availableExcludeFilter = $listTags
 
 do {
   Clear-Host
-  ShowLogMessage -type "OTHER" -message $Message.Oth_ListSnaps -variable $sChooseGame -sLogFile ([ref]$sLogFile)
+  Write-Message -Type "OTHER" -Message $Message.Oth_ListSnaps -Variables $sChooseGame -LogFile $logRef
 
   $aSnapshotListDetails | Select-Object -Property Number, ShortId, DateTime, Tags, TotalFileBackup, $selectTotalFileSize, TotalBlob, $selectTotalBlobSize | Format-Table -AutoSize
 
   $result = $host.ui.PromptForChoice($Title, $Question, $options, 2)
 
-  ShowMessage -type "OTHER" -message ""
+  Write-Message -Type "OTHER" -Message ""
 
   switch ($result) {
     0 {
@@ -778,7 +779,7 @@ do {
       Break
     }
     Default {
-      ShowMessage -type "ERROR" -message $Message.Err_GenericChoice
+      Write-Message -Type "ERROR" -Message $Message.Err_GenericChoice
     }
   }
 } while ($result -ne 2)
