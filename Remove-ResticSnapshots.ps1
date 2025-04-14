@@ -16,11 +16,11 @@
     Set a log file to avoid multiple log
   .NOTES
     Name           : Remove-ResticSnapshots
-    Version        : 3.0-Beta.2
+    Version        : 3.0.0
     Created by     : Chucky2401
     Date Created   : 21/05/2023
     Modify by      : Chucky2401
-    Date modified  : 21/05/2023
+    Date modified  : 14/04/2025
     Change         : Creation
   .LINK
     https://github.com/Chucky2401/Restic-Scripts/blob/main/README.md#clean-restic
