@@ -1,5 +1,76 @@
 # Changelog
 
+## 2025.04.13 - v3.0.0
+
+### New
+
+- (Get-ResticSnapshots): after the list of snapshots appear, you can now choose to run the clean step. The script will ask you to choose filter, or not, and the number of snapshots to keep. After this step, you will be back to choose to clean, or you can quit.
+- (Clean-Restic): Add parameter `-ExcludeTag`
+- (Get-ResticSnapshots): ability to choose tag to exclude before calling the script to clean
+- (Get-ResticSnapshots): add parameter `-Listing` which show snapshots list and quit
+- (Remove-ResticSnapshots): let you remove one or some specific snapshots!
+- (Get-ResticSnapshots): let you call `Remove-ResticSnapshots` after you choose the snapshots to remove
+
+### Change
+
+- (Clean-Restic): you can now pass multiple tag to the `-TagFilter` parameter. Example: if you use `-TagFilter "gameplay", "manual"` the snapshots that have the tag **gameplay** or **manual** will be deleted.
+- (Clean-Restic): rename parameter `-TagFilter` to `-IncludeTag`
+
+### Changelog
+
+- *88f0472* - chore(Clean-Restic): update header
+- *f2fb01a* - chore(Clean-Restic): use a scriptRoot variable
+- *31285d6* - fix(Clean-Restic): calculate stats if NoStats is not use
+- *93702e5* - chore(Clean-Restic): remove 'Remove-Module'
+- *7c7c612* - chore(Clean-Restic): replace all old message function
+- *2edacce* - feat(Clean-Restic): add KeepLast parameter
+- *5f82435* - fix(Get-ResticGameSnapshots): suppress remove-module
+- *8ddb2e2* - chore(Get-ResticGameSnapshots): change 'Game' from 'Name'
+- *53f200f* - chore(Get-ResticGameSnapshots): use scriptRoot variable
+- *7e992b0* - fix(local): typo in fr language
+- *390d772* - feat(local): change message following parameter used
+- *bcc5c7f* - refactor(Clean-Restic): change indent size
+- *6d88844* - chore(Get-ResticGameSnapshot): update header
+- *a2fee72* - feat(Get-ResticGameSnapshots): add counter type
+- *0a5cd24* - refactor(Get-ResticGameSnapshots): change indent
+- *6140a0f* - chore(Get-ResticGameSnapshots): default option to Quit
+- *3c99eb1* - fix(Clean-Restic): declare vars in foreach loop
+- *b9cc241* - chore(Clean-Restic): use absolute path for local and modules
+- *93b8cb8* - feat(Clean-Restic): add Game parameter pipeline from Name
+- *9253285* - chore: add test folder to exclude
+- *84e4560* - doc(REadme): update readme according new features and order scripts
+- *2c26b4a* - doc(Changelog): update changelog for Remove-ResticSnapshots
+- *caf4b84* - chore(Remove-ResticSnapshots): comment demo code
+- *f306443* - feat(Get-ResticGameSnapshots): implement Remove in the menu!
+- *bef2b18* - feat: script to remove specific Restic snapshots!
+- *50c1db4* - chore(Clean-Restic): remove a useless Pause
+- *b383da9* - chore: move local for Tjvs.Settings to specific local files
+- *76829b2* - doc(Changelog): update changelog
+- *6a1dbe8* - doc(Readme): update readme according new features
+- *c42bff0* - feat(Get-ResticGameSnapshots): let the user able to use PowerShell cmdlets with `-Listing` parameter
+- *9b07f00* - chore: update .gitignore
+- *322ecfc* - feat(Get-ResticGameSnapshots): add `-Listing` parameter which show snapshots list and quit.
+- *5ded3b6* - feat: add parameter `-LogFile` to avoid multiple log fils when called by Get.
+- *eeab12e* - feat(Get-ResticGameSnapshots): add possibilty to choose exclude tag filter
+- *cdf2cdf* - fix(Clean-Restic): handle correctly exlucde parameter
+- *70e9df4* - feat(Clean-Restic): update alias parameters and help header
+- *5e86325* - feat: implement new parameter `-ExcludeTag` to `Clean-Restic`
+- *0bd86dc* - feat(Tjvs.Message): reorganize modules with new functions (lost?)
+- *13b4f33* - feat(Tjvs.Settings): update default settings variable
+- *a509940* - feat: get tag for filter from snapshots listed.
+
+- *ae30c7c* - feat(Clean-Restic): rename parameter -TagFilter to -IncludeTag.
+- *5e86325* - feat: implement new parameter -ExcludeTag to Clean-Restic
+- *eeab12e* - feat(Get-ResticGameSnapshots): add possibility to choose exclude tag filter
+- *322ecfc* - feat(Get-ResticGameSnapshots): add -Listing parameter which show snapshots list and quit.
+- *bef2b18* - feat: script to remove specific Restic snapshots!
+- *f306443* - feat(Get-ResticGameSnapshots): implement Remove in the menu!
+
+- *df3c662* - feat(Clean-Restic): can use multiple different filters!
+- *681d4a1* - feat: add possibility to clean snapshots from Get-ResticGameSnapshots!
+
+---
+
 ## 2023.05.21 - v3.0-Beta.2
 
 ### New
@@ -25,6 +96,8 @@
 - *bef2b18* - feat: script to remove specific Restic snapshots!
 - *f306443* - feat(Get-ResticGameSnapshots): implement Remove in the menu!
 
+---
+
 ## 2023.05.15 - v3.0-Beta.1
 
 ### New
@@ -33,7 +106,7 @@
 
 ### Change
 
-- (Clean-Restic): you can now pass multiple tag to the `-TagFilter` parameter. Example: if you yse `-TagFilter "gameplay", "manual"` the snapshots that have the tag **gameplay** or **manual** will be deleted.
+- (Clean-Restic): you can now pass multiple tag to the `-TagFilter` parameter. Example: if you use `-TagFilter "gameplay", "manual"` the snapshots that have the tag **gameplay** or **manual** will be deleted.
 
 ### Changelog
 
@@ -41,6 +114,8 @@
 
 - *df3c662* - feat(Clean-Restic): can use multiple different filters!
 - *681d4a1* - feat: add possibility to clean snapshots from Get-ResticGameSnapshots!
+
+---
 
 ## 2023.05.11 - v2.1
 
@@ -82,6 +157,8 @@
 - *8e78af6* - feat(Tjvs.Restic): add Tjvs.Settings modules as required
 - *b107912* - feat(Tjvs.Restic): Set-Environment call when module is imported. Call Remove-Environment when module is removed
 - *f867394* - feat(Get-ResticGameSnapshots): add parameters CountOnly and Game.
+
+---
 
 ## 2023.01.03
 
@@ -138,6 +215,8 @@
 - *99663e0* - feat(env): using env var now! Easier to use Restic like this!
 - *be6e4f2* - feat(modules): add two functions to set and remove Restic env var
 - *931a2e7* - chore(modules): move modules from 'func' to 'modules' subfolders
+
+---
 
 ## 2022.12.13
 
