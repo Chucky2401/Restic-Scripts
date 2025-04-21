@@ -68,7 +68,9 @@ function Write-Message {
     [Switch]$LogOnly
   )
   
-  $dateNow         = Get-Date -Format "dd.MM.yyyy - hh:mm:ss"
+  $datePattern     = ((Get-Culture).DateTimeFormat).ShortDatePattern
+  $timePattern     = ((Get-Culture).DateTimeFormat).LongTimePattern
+  $dateNow         = Get-Date -Format "$datePattern - $timePattern"
   $backgroundColor = (Get-Host).UI.RawUI.BackgroundColor
   $forgroundColor  = (Get-Host).UI.RawUI.ForegroundColor
   $handleMessage   = $False
