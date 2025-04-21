@@ -40,6 +40,9 @@ the tag **gameplay** or **manual** will be deleted.
 
 ### Changelog
 
+- *jd8d2dc* - feat: Show header and footer only on standalone use
+- *jb8e156* - fix(Start-Command): Use Get-Command instead of Resolve-Path on FilePath
+- *j2caca2* - feat(Write-Message): date and time pattern from culture
 - *88f0472* - chore(Clean-Restic): update header
 - *f2fb01a* - chore(Clean-Restic): use a scriptRoot variable
 - *31285d6* - fix(Clean-Restic): calculate stats if NoStats is not use
