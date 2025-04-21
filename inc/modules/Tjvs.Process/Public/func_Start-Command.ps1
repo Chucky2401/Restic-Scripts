@@ -37,7 +37,7 @@ Function Start-Command {
     [Parameter(Mandatory = $False)]
     [string[]]$ArgumentList,
     [Parameter(Mandatory = $False)]
-    [string]$WorkingDir = $($(Split-Path $(Resolve-Path $FilePath)) -replace "Microsoft\.PowerShell\.Core\\FileSystem::", ""),
+    [string]$WorkingDir = $($(Split-Path $(Get-Command $FilePath).Path) -replace "Microsoft\.PowerShell\.Core\\FileSystem::", ""),
     [Parameter(Mandatory = $False)]
     [ValidateSet("runas", IgnoreCase = $False)]
     [string]$Verb = ""
@@ -46,8 +46,8 @@ Function Start-Command {
   Try {
     $oProcessInfo                        = New-Object System.Diagnostics.ProcessStartInfo
     $oProcess                            = New-Object System.Diagnostics.Process
-    
-    $oProcessInfo.FileName               = $($(Resolve-Path $FilePath) -replace "Microsoft\.PowerShell\.Core\\FileSystem::", "")
+
+    $oProcessInfo.FileName               = $($(Get-Command $FilePath).Path -replace "Microsoft\.PowerShell\.Core\\FileSystem::", "")
     $oProcessInfo.RedirectStandardError  = $true
     $oProcessInfo.RedirectStandardOutput = $true
     $oProcessInfo.UseShellExecute        = $false
