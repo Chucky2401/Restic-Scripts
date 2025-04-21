@@ -627,16 +627,20 @@ $delete   = [ChoiceDescription]::new($Message.Men_DeleteTitle, $Message.Men_Dele
 $quit     = [ChoiceDescription]::new($Message.Men_QuitTitle, $Message.Men_QuitDescription)
 $options  = [ChoiceDescription[]]($clean, $delete, $quit)
 
+$pipelineLength = $PSCmdlet.MyInvocation.PipelineLength
+
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
-Write-CenterText "*********************************" $sLogFile
-Write-CenterText "*                               *" $sLogFile
-Write-CenterText "*      List Game Snapshot       *" $sLogFile
-Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
-Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
-Write-CenterText "*                               *" $sLogFile
-Write-CenterText "*********************************" $sLogFile
-Write-Message -Type "OTHER" -Message "" -LogFile $logRef
+If ($pipelineLength -le 1) {
+  Write-CenterText "*********************************" $sLogFile
+  Write-CenterText "*                               *" $sLogFile
+  Write-CenterText "*      List Game Snapshot       *" $sLogFile
+  Write-CenterText "*           $(Get-Date -Format 'yyyy.MM.dd')          *" $sLogFile
+  Write-CenterText "*          Start $(Get-Date -Format 'HH:mm')          *" $sLogFile
+  Write-CenterText "*                               *" $sLogFile
+  Write-CenterText "*********************************" $sLogFile
+  Write-Message -Type "OTHER" -Message "" -LogFile $logRef
+}
 
 # List games
 Write-Message -Type "INFO" -Message $Message.Inf_GetGames -LogFile $logRef

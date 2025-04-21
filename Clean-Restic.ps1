@@ -127,12 +127,14 @@ BEGIN {
   # Init Var
   $oDataBefore = $null
 
+  $pipelineLength = $PSCmdlet.MyInvocation.PipelineLength
+
   #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
   $aSnapshotRemoved      = @()
   $aSnapshotStillPresent = @()
 
-  If (-not $FromGet){
+  If (-not $FromGet -and $pipelineLength -le 1){
     Write-CenterText "*********************************" $sLogFile
     Write-CenterText "*                               *" $sLogFile
     Write-CenterText "*      Restic clean backup      *" $sLogFile
@@ -350,7 +352,7 @@ END {
     Write-Message -Type "OTHER" -Message $Message.Oth_BfrRatio -Variables $($oDataBefore.Ratio) -LogFile $logRef
   }
 
-  If (-not $FromGet) {
+  If (-not $FromGet -and $pipelineLength -le 1) {
     Write-CenterText "*********************************" $sLogFile
     Write-CenterText "*                               *" $sLogFile
     Write-CenterText "*      Restic clean backup      *" $sLogFile
