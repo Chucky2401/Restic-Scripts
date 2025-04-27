@@ -40,6 +40,8 @@ the tag **gameplay** or **manual** will be deleted.
 
 ### Changelog
 
+- *92d1137* - fix(Clean-Restic): Calculate stats in BEGIN instead of PROCESS
+- *fac8a17* - fix(local): Missin space for FR local
 - *jd8d2dc* - feat: Show header and footer only on standalone use
 - *jb8e156* - fix(Start-Command): Use Get-Command instead of Resolve-Path on FilePath
 - *j2caca2* - feat(Write-Message): date and time pattern from culture
