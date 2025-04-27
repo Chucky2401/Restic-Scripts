@@ -65,7 +65,7 @@
     Oth_BfrBlobSize = "`tTotal taille blobs:         {0}"      # 0: Blob size before
     Oth_BfrRatio    = "`tRatio:                      {0} %"    # 0: Ratio before
     #### Both (Before + After)
-    Oth_BothSnapNbr  = "`tNombre snapshots:          {0} / {1}"      # 0: Snapshots number before / 1: Snapshots number after
+    Oth_BothSnapNbr  = "`tNombre snapshots:           {0} / {1}"      # 0: Snapshots number before / 1: Snapshots number after
     Oth_BothFileBck  = "`tTotal fichiers sauvegardés: {0} / {1}"      # 0: Total files backup before / 1: Total files backup after
     Oth_BothFileSize = "`tTotal taille fichiers:      {0} / {1}"      # 0: Total files size before / 1: Total files size after
     Oth_BothBlob     = "`tTotal blobs:                {0} / {1}"      # 0: Total blob before / 1: Total blob after
